@@ -1,0 +1,14 @@
+{Id}:
+Identifiers are the variable names -> start with an alphabet & can contain alphanumeric & special characters $,_, *, and #
+
+{Type}:
+Allowed Data types are either int(integer), bool(boolean), or alpha(quoted string)
+
+{value}:
+The set of values can either be a bool, an integer, or a string.
+
+^var {Id} : {Type} [= {k}]^
+*Declaration of Identifiers
+
+^println {k}^
+Print statement
