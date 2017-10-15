@@ -6,8 +6,10 @@ class PrintParserTest {
   
   @Test
   def isParsable(){
-    val parser: PrintParser = new PrintParser("")
-    val parser1: PrintParser = new PrintParser("")
+    val parser: PrintParser = new PrintParser("print this")
+    val parser1: PrintParser = new PrintParser("print 'HELLO, WORld$$'")
     
+    assertFalse(parser.isParsable())
+    assertTrue(parser1.isParsable())
   }
 }
