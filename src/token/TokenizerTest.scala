@@ -6,7 +6,7 @@ class TokenizerTest {
   
   @Test
   def isVariableTypeTest(){
-    val tokenizer: Tokenizer = new Tokenizer("")
+    val tokenizer: Tokenizer = new Tokenizer()
     
     assertFalse(tokenizer.isVariableType("variable"))
     assertTrue(tokenizer.isVariableType("const"))
@@ -15,7 +15,7 @@ class TokenizerTest {
   
   @Test
   def isDataTypeTest(){
-    val tokenizer: Tokenizer = new Tokenizer("")
+    val tokenizer: Tokenizer = new Tokenizer()
     
     assertFalse(tokenizer.isDataType("variable"))
     assertTrue(tokenizer.isDataType("int"))
@@ -25,7 +25,7 @@ class TokenizerTest {
   
   @Test
   def isIntegerTest(){
-    val tokenizer: Tokenizer = new Tokenizer("")
+    val tokenizer: Tokenizer = new Tokenizer()
     
     assertFalse(tokenizer.isInteger("1337Alpha"))
     assertTrue(tokenizer.isInteger("-234"))
@@ -35,7 +35,7 @@ class TokenizerTest {
   
   @Test
   def isBooleanTest(){
-    val tokenizer: Tokenizer = new Tokenizer("")
+    val tokenizer: Tokenizer = new Tokenizer()
     
     assertFalse(tokenizer.isBoolean("ttt"))
     assertTrue(tokenizer.isBoolean("tt"))
@@ -45,7 +45,7 @@ class TokenizerTest {
   
   @Test
   def isAlphaTest(){
-    val tokenizer: Tokenizer = new Tokenizer("")
+    val tokenizer: Tokenizer = new Tokenizer()
 
     assertFalse(tokenizer.isAlpha("\"1337Alpha"))
     assertTrue(tokenizer.isAlpha("\"1337Alpha4ali\""))
@@ -55,7 +55,7 @@ class TokenizerTest {
   
 //  @Test
 //  def isStringTest(){
-//    val tokenizer: Tokenizer = new Tokenizer("")
+//    val tokenizer: Tokenizer = new Tokenizer()
 //
 //    assertFalse(tokenizer.isAlpha("\"1337Alpha"))
 //    assertTrue(tokenizer.isAlpha("\"Alpha34li\""))
@@ -64,7 +64,7 @@ class TokenizerTest {
   
   @Test
   def isIdentifierTest(){
-    val tokenizer: Tokenizer = new Tokenizer("")
+    val tokenizer: Tokenizer = new Tokenizer()
     
     assertTrue(tokenizer.isIdentifier("var_3#"))
     assertFalse(tokenizer.isIdentifier("3identity"))
@@ -75,7 +75,7 @@ class TokenizerTest {
     
   @Test
   def isUOPTest(){
-    val tokenizer: Tokenizer = new Tokenizer("")
+    val tokenizer: Tokenizer = new Tokenizer()
 
     assertTrue(tokenizer.isUOP("-"))
     assertTrue(tokenizer.isUOP("not"))
@@ -85,7 +85,7 @@ class TokenizerTest {
   
   @Test
   def isBOPTest(){
-   val tokenizer: Tokenizer = new Tokenizer("")
+   val tokenizer: Tokenizer = new Tokenizer()
 
     assertTrue(tokenizer.isBOP("><"))
     assertTrue(tokenizer.isBOP("=="))
@@ -106,7 +106,7 @@ class TokenizerTest {
   
   @Test
   def isReservedTest(){
-    val tokenizer: Tokenizer = new Tokenizer("")
+    val tokenizer: Tokenizer = new Tokenizer()
     assertTrue(tokenizer.isReserved("if"))
     assertTrue(tokenizer.isReserved("do"))
     assertTrue(tokenizer.isReserved("print"))

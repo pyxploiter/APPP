@@ -1,9 +1,9 @@
 package token
 
-class Token(val tokenx: String,val Typex: TokenType.EnumVal) {
+class Token(val tokenx: String,val Typex: TokenType.Type) {
   private val token:String = tokenx;
-  private val Type: TokenType.EnumVal = Typex;
+  private val Type: TokenType.Type = Typex;
   
   def getToken(): String = token
-  def getType(): TokenType.EnumVal = Type
+  def getType(): TokenType.Type = Type
 }

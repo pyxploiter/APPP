@@ -1,10 +1,10 @@
 package token;
 import scala.util.matching.Regex
 
-class TokenData(val patternx: Regex, val Typex: TokenType.EnumVal) {
+class TokenData(val patternx: Regex, val Typex: TokenType.Type) {
   private val pattern = patternx;
-  private val Type: TokenType.EnumVal = Typex;
+  private val Type: TokenType.Type = Typex;
   
   def getPattern(): Regex = pattern
-  def getType(): TokenType.EnumVal = Type
+  def getType(): TokenType.Type = Type
 }

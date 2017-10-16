@@ -2,22 +2,31 @@ package token
 
 //Enumeration for types of Tokens
 object TokenType {
-  sealed trait EnumVal
-  case object IDENTIFIER extends EnumVal
-  case object INTEGER extends EnumVal
-  case object BOOLEAN extends EnumVal
-  case object ALPHA extends EnumVal
-  case object STRING extends EnumVal
-  case object SEMICOLON extends EnumVal
-  case object ASSIGNMENT extends EnumVal
-  case object VARIABLE_TYPE extends EnumVal
-  case object COLON extends EnumVal
-  case object EMPTY extends EnumVal
-  case object SPACE extends EnumVal
-  case object BOP extends EnumVal
-  case object UOP extends EnumVal
-  case object DATA_TYPE extends EnumVal
-  case object RESERVED extends EnumVal
+  sealed trait Type
+  case object IDENTIFIER extends Type
+  case object INTEGER extends Type
+  case object BOOLEAN extends Type
+  case object ALPHA extends Type
+  case object STRING extends Type
+  case object ASSIGNMENT extends Type
+  case object VARIABLE_TYPE extends Type
+  case object COLON extends Type
+  case object EMPTY extends Type
+  case object SPACE extends Type
+  case object BOP extends Type
+  case object UOP extends Type
+  case object DATA_TYPE extends Type
+  case object RESERVED extends Type
+  case object BREAK extends Type
+  case object WHILE extends Type
+  case object DO extends Type
+  case object IF extends Type
+  case object THEN extends Type
+  case object ELSE extends Type
+  case object NIL extends Type
+  case object PRINT extends Type
   val typeoftokens = Seq(IDENTIFIER, INTEGER, BOOLEAN, ALPHA, STRING, 
-                        EMPTY, SPACE, SEMICOLON, ASSIGNMENT, VARIABLE_TYPE, COLON, BOP, DATA_TYPE, RESERVED)
+                        EMPTY, SPACE, ASSIGNMENT, VARIABLE_TYPE, 
+                        COLON, BOP, DATA_TYPE, RESERVED, BREAK, WHILE, DO, IF, THEN, ELSE,
+                        NIL, PRINT)
 }

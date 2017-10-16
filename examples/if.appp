@@ -1,2 +1,2 @@
-var x:alpha= tt;
+var x:alpha =tt;
 if x then print "true" else print x;
