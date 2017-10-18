@@ -62,8 +62,8 @@ class Tokenizer(code: String) {
     else return (tokenList.apply(current_pos), current_pos+1)
   }
   
-  def lookAhead(current_pos: Int): (Token,Int) = {
-    if (current_pos > tokenList.length-1) return(new Token("EOF",null),current_pos) 
-    else return (tokenList.apply(current_pos), current_pos)
-  }
+//  def lookAhead(current_pos: Int): (Token,Int) = {
+//    if (current_pos > tokenList.length-1) return(new Token("EOF",null),current_pos) 
+//    else return (tokenList.apply(current_pos), current_pos)
+//  }
 }

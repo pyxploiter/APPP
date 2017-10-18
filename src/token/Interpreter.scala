@@ -1,14 +1,8 @@
 package token
 
-import parser.UnaryOp
-
+import parser._
 import parser.ExprParser
 
-import parser.Num
-
-import parser.BinOp
-
-import parser.AST
 
 class Interpreter(val parser: ExprParser){
   def visit(node: AST): Int = {
@@ -18,6 +12,21 @@ class Interpreter(val parser: ExprParser){
     else throw new Exception("Invalid node")
   }
   
+  def visit_Compund(node: Compound){
+    for(child <- node.children){
+      visit(child.asInstanceOf[AST])
+    }
+  }
+  
+  def visit_Assign(node: Assign){
+    val var_name = node.left.asInstanceOf[Var].token.getToken()
+    
+  }
+  
+  def visit_Var(node: Var){
+    
+  }
+
   def visit_UnaryOp(node: UnaryOp): Int = {
     if (node.token.getType() == TokenType.UOP) return -visit(node.expr_node)
     else return 0

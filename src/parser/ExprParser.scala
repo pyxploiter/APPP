@@ -4,11 +4,18 @@ import token.Token
 import token.TokenType
 import token.Tokenizer
 
+abstract class Symbol_Table extends reflect.internal.SymbolTable
+
 trait AST
+
 case class BinOp(val left: AST, val token: Token, val right: AST) extends AST
 case class UnaryOp(val token: Token, expr_node: AST) extends AST
 case class Num(val token:Token) extends AST
 //case class Bool(val token:Token) extends AST
+case class Assign(val left:AST, val token: Token, val right: AST) extends AST
+case class Var(val token: Token) extends AST
+case class Const(val token: Token) extends AST
+case class Compound(val children: List[AST]) extends AST
 
 class ExprParser(val tokenizer: Tokenizer) {
   val (cr_token, cr_token_pos): (Token,Int) = tokenizer.getNextToken(0)
@@ -18,6 +25,51 @@ class ExprParser(val tokenizer: Tokenizer) {
       return tokenizer.getNextToken(current_token_pos)
     }
    else throw new Exception("Eat Error")
+  }
+  
+  def compound_statement(current_token: Token, current_token_pos: Int): (Token, Int, AST) = {
+    val (cur_token, cur_token_pos, nodes) = statement_list(current_token, current_token_pos)
+    val root = Compound(nodes)
+    return (cur_token, cur_token_pos,root)
+  }
+  
+  def statement_list(current_token:Token, current_token_pos:Int): (Token, Int, List[AST]) = {
+    val (cur_token, cur_token_pos, node) = statement(current_token, current_token_pos)
+    val results = List(node)
+    
+    def get_next_statement(token: Token, token_pos: Int, resultx: List[AST]): (Token, Int, List[AST]) = {
+      if (token.getType() == TokenType.BREAK){
+        val (cur_token, cur_token_pos) = eat(token, TokenType.BREAK,token_pos)
+        if (cur_token_pos != token_pos){
+          val (cur_tok, cur_tok_pos, node) = statement(cur_token, cur_token_pos)
+          val new_list: List[AST] = resultx :+ node
+          val (tok, pos, result) = get_next_statement(cur_tok, cur_tok_pos, new_list)
+          return (tok, pos, result)
+        }
+        else
+          return (token, token_pos, resultx)
+      } else{
+        if (token_pos == tokenizer.tokenList.length){
+          return (token, token_pos, resultx)
+        }
+        else{
+          throw new Exception("Semi colon missing")
+        }
+      }
+    }
+    
+    val (cur_tok, cur_tok_pos, new_results) = get_next_statement(cur_token, cur_token_pos, results)
+    return (cur_tok, cur_tok_pos, new_results)
+  }
+  
+  def statement(current_token:Token, current_token_pos:Int): (Token, Int, AST) = {
+    if (current_token.getType() == TokenType.VARIABLE_TYPE){
+      val (cur_token, cur_token_pos) = eat(current_token, TokenType.VARIABLE_TYPE,current_token_pos)
+      val (tok,pos,node) = assignment_statement(cur_token, cur_token_pos)
+      return (tok,pos,node)
+    }
+    
+    else throw new Exception("No statement")
   }
   
   def factor(current_token: Token, current_token_pos:Int): (Token, Int, AST) = {
@@ -32,12 +84,15 @@ class ExprParser(val tokenizer: Tokenizer) {
       return (cur_token, cur_token_pos, Num(current_token))
     }
     
+    else{
+     val (cur_token, cur_token_pos, node) = variable(current_token, current_token_pos)
+     return (cur_token, cur_token_pos, node)
+    }
+    
 //    else if(current_token.getType() == TokenType.BOOLEAN){
 //      val (cur_token, cur_token_pos) = eat(current_token, TokenType.BOOLEAN, current_token_pos)
 //      return (cur_token, cur_token_pos, Bool(current_token))
 //    }
-    
-    else throw new Exception("factor Error")
   }
   
   def term(current_token: Token, current_token_pos:Int): (Token, Int, AST) = {
@@ -80,9 +135,24 @@ class ExprParser(val tokenizer: Tokenizer) {
     return (tok,pos,node)
   }
   
+  def assignment_statement(current_token: Token, current_token_pos: Int): (Token, Int, AST) = {
+    val (cur_token, cur_token_pos,left_node) = variable(current_token, current_token_pos)
+    val (cur_tok, cur_tok_pos) = eat(cur_token, TokenType.ASSIGNMENT,cur_token_pos)
+    val (tok, pos, right_node) = expr(cur_tok, cur_tok_pos)
+    val next_node = Assign(left_node, cur_token, right_node)
+    return (tok, pos, next_node)
+  }
+  
+  def variable(current_token: Token, current_token_pos: Int): (Token, Int, AST) = {
+    val node = Var(current_token)
+    val (cur_token, cur_token_pos) = eat(current_token, TokenType.IDENTIFIER, current_token_pos)
+    return (cur_token, cur_token_pos, node)
+  }
+  
   def parse(): AST = {
-    val (tok,pos,tree) = expr(cr_token, cr_token_pos)
-    //println(tree)
+    //val (tok,pos,tree) = expr(cr_token, cr_token_pos)
+    val (tok,pos,tree) = compound_statement(cr_token, cr_token_pos)
+    println(tree) 
     return tree
   }
 }
