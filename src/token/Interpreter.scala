@@ -1,6 +1,16 @@
 package token
 
-class Interpreter(val parser: Parser){
+import parser.UnaryOp
+
+import parser.ExprParser
+
+import parser.Num
+
+import parser.BinOp
+
+import parser.AST
+
+class Interpreter(val parser: ExprParser){
   def visit(node: AST): Int = {
     if (node.isInstanceOf[BinOp]) visit_BinOp(node.asInstanceOf[BinOp])
     else if (node.isInstanceOf[Num]) visit_Num(node.asInstanceOf[Num])

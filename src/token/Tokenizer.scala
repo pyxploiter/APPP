@@ -19,7 +19,7 @@ class Tokenizer(code: String) {
     val _plus = new TokenData("\\+".r, TokenType.PLUS)
     val _multiply = new TokenData("\\*".r, TokenType.MUL)
     val _divide = new TokenData("\\/".r, TokenType.DIV)
-    val _bop = new TokenData("==|><|and|or|\\+|\\*|\\/|\\^|>|<".r, TokenType.BOP)
+    val _bop = new TokenData("==|><|and|or|\\^|>|<".r, TokenType.BOP)
     val _uop = new TokenData("-|not".r, TokenType.UOP)
     val _assign_op = new TokenData("[=]{1}".r, TokenType.ASSIGNMENT)
     val _colon = new TokenData("[:]{1}".r, TokenType.COLON)
@@ -33,7 +33,7 @@ class Tokenizer(code: String) {
     val _data_type = new TokenData("int|bool|alpha".r, TokenType.DATA_TYPE)
     val _identifier = new TokenData("[a-zA-Z][A-Za-z0-9_$*#]*".r,TokenType.IDENTIFIER)
     val _variable_type = new TokenData("const|var".r, TokenType.VARIABLE_TYPE)
-    val finalList = List(_space, _break,_variable_type, _print, _while, _do, _if, _then, _else, _colon, _data_type, _assign_op,_uop, _int_literal , _plus, _multiply, _divide, _bop, _alpha_literal, _bool_literal , _identifier )
+    val finalList = List( _break,_variable_type, _print, _while, _do, _if, _then, _else, _colon, _data_type, _assign_op,_uop, _int_literal , _plus, _multiply, _divide, _bop, _alpha_literal, _bool_literal , _identifier )
     return finalList
   }
   
@@ -60,5 +60,10 @@ class Tokenizer(code: String) {
   def getNextToken(current_pos: Int): (Token,Int) = {
     if (current_pos > tokenList.length-1) return(new Token("EOF",null),current_pos) 
     else return (tokenList.apply(current_pos), current_pos+1)
+  }
+  
+  def lookAhead(current_pos: Int): (Token,Int) = {
+    if (current_pos > tokenList.length-1) return(new Token("EOF",null),current_pos) 
+    else return (tokenList.apply(current_pos), current_pos)
   }
 }

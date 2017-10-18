@@ -1,6 +1,7 @@
 package token
 import parser._
 import scala.io.Source
+import parser._
 
 object main {
   def main(args: Array[String]) {
@@ -9,10 +10,10 @@ object main {
     val codeFile = Source.fromFile("examples/if.appp")
     val sourceCode = codeFile.mkString
 	  //println(sourceCode)  
-	  val tokenizer: Tokenizer = new Tokenizer("-4+3*2")
-    val parser: Parser = new Parser(tokenizer)
+	  val tokenizer: Tokenizer = new Tokenizer(sourceCode)
+    val parser: ExprParser = new ExprParser(tokenizer)
     val interpreter = new Interpreter(parser)
-    println(interpreter.interpret())
-    //println(tokenizer.tokenList.map(println(_)))
+    //println(interpreter.interpret())
+    //tokenizer.tokenize(sourceCode).map(f=> println(f.getToken()) )
   }
 }
