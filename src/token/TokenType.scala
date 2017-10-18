@@ -25,8 +25,12 @@ object TokenType {
   case object ELSE extends Type
   case object NIL extends Type
   case object PRINT extends Type
+  case object PLUS extends Type
+  case object MUL extends Type
+  case object DIV extends Type
+  
   val typeoftokens = Seq(IDENTIFIER, INTEGER, BOOLEAN, ALPHA, STRING, 
                         EMPTY, SPACE, ASSIGNMENT, VARIABLE_TYPE, 
                         COLON, BOP, DATA_TYPE, RESERVED, BREAK, WHILE, DO, IF, THEN, ELSE,
-                        NIL, PRINT)
+                        NIL, PRINT, PLUS, MUL, DIV)
 }

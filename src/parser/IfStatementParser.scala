@@ -1,6 +1,6 @@
 package parser
 
-class IfStatementParser(override val codeLine: String) extends Parser(codeLine){
+class IfStatementParser(override val codeLine: String) extends Parserx(codeLine){
   override def isParsable(): Boolean = {
     val identifier: String = "([a-zA-Z]+[A-Za-z0-9_$*#]*)"
     val value: String = "(((-?)[0-9]+)|(([t]{2})|([f]{2}))|(([\"|\']).*([\"|\'])$))"
