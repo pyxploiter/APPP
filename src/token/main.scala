@@ -10,9 +10,11 @@ object main {
     val codeFile = Source.fromFile("examples/if.appp")
     val sourceCode = codeFile.mkString
 	  //println(sourceCode)  
-	  val tokenizer: Tokenizer = new Tokenizer("3+7/3+6*3*5/8");
+	  val tokenizer: Tokenizer = new Tokenizer("-9*6+7/2")
     val parser: Parser = new Parser(tokenizer)
-    parser.parse()
+    val interpreter = new Interpreter(parser)
+    println(interpreter.interpret())
+    
     //val (tok, pos) = tokenizer.getNextToken(0)
     //println(tok.getToken())
     //println(pos)
