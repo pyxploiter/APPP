@@ -33,7 +33,7 @@ class Tokenizer(code: String) {
     val _data_type = new TokenData("int|bool|alpha".r, TokenType.DATA_TYPE)
     val _identifier = new TokenData("[a-zA-Z][A-Za-z0-9_$*#]*".r,TokenType.IDENTIFIER)
     val _variable_type = new TokenData("const|var".r, TokenType.VARIABLE_TYPE)
-    val finalList = List(_space, _break,_variable_type, _print, _while, _do, _if, _then, _else, _colon, _data_type, _assign_op,_int_literal, _uop, _plus, _multiply, _divide, _bop, _alpha_literal, _bool_literal , _identifier )
+    val finalList = List(_space, _break,_variable_type, _print, _while, _do, _if, _then, _else, _colon, _data_type, _assign_op,_uop, _int_literal , _plus, _multiply, _divide, _bop, _alpha_literal, _bool_literal , _identifier )
     return finalList
   }
   

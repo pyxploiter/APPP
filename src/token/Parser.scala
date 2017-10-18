@@ -78,7 +78,7 @@ class Parser(val tokenizer: Tokenizer) {
   
   def parse(): AST = {
     val (tok,pos,tree) = expr(cr_token, cr_token_pos)
-    println(tree)
+    //println(tree)
     return tree
   }
 }

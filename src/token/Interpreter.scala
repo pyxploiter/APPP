@@ -9,22 +9,15 @@ class Interpreter(val parser: Parser){
   }
   
   def visit_UnaryOp(node: UnaryOp): Int = {
-    if (node.token.getType() == TokenType.INTEGER){
-      return -visit(node.expr_node)
-    } else return -999
-//    else if (node.token.getType() == TokenType.BOOLEAN){
-//      return node.token.getToken()
-//    }
+    if (node.token.getType() == TokenType.UOP) return -visit(node.expr_node)
+    else return 0
   }
   
   def visit_BinOp(node: BinOp): Int = {
-   if(node.token.getType()==TokenType.PLUS) 
-     return (visit(node.left) + visit(node.right))
-   else if (node.token.getType()==TokenType.MUL) 
-     return (visit(node.left.asInstanceOf[AST]) * visit(node.right.asInstanceOf[AST]))
-   else if (node.token.getType()==TokenType.DIV) 
-     return (visit(node.left) / visit(node.right))
-   else return -999
+   if(node.token.getType()==TokenType.PLUS) return (visit(node.left) + visit(node.right))
+   else if (node.token.getType()==TokenType.MUL) return (visit(node.left) * visit(node.right))
+   else if (node.token.getType()==TokenType.DIV) return (visit(node.left) / visit(node.right))
+   else return 0
   }
   
   def visit_Num(node: Num): Int = {
