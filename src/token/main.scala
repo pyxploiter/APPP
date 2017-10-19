@@ -10,10 +10,11 @@ object main {
     val codeFile = Source.fromFile("examples/if.appp")
     val sourceCode = codeFile.mkString
 	  //println(sourceCode)  
-	  val tokenizer: Tokenizer = new Tokenizer("var x=13; var y=x")
+    val str:String = "var y:alpha;skip; const uzair:int=0; var asad:bool=tt; "
+	  val tokenizer: Tokenizer = new Tokenizer(str)
+    //tokenizer.tokenize(str).map(f=> println(f.getToken()+" "+f.getType()) )
     val parser: ExprParser = new ExprParser(tokenizer)
     val interpreter = new Interpreter(parser)
     println(interpreter.interpret())
-    //tokenizer.tokenize(sourceCode).map(f=> println(f.getToken()) )
   }
 }
