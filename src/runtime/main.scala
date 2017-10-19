@@ -1,14 +1,17 @@
-package token
+package runtime
 import parser._
 import scala.io.Source
 import parser._
+import interpreter.value
+import interpreter.Interpreter
+import token.Tokenizer
 
 object main {
   def main(args: Array[String]) {
     val codeFile = Source.fromFile("examples/if.appp")
     val sourceCode = codeFile.mkString
 	  //println(sourceCode)  
-    val str:String = "var x:int=6"
+    val str:String = "x=6; print x"
 	  val tokenizer: Tokenizer = new Tokenizer(str)
     //tokenizer.tokenize(str).map(f=> println(f.getToken()+" "+f.getType()) )
     val parser: ExprParser = new ExprParser(tokenizer)

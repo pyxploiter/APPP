@@ -1,7 +1,8 @@
-package token
+package interpreter
 
 import parser._
 import parser.ExprParser
+import token.TokenType
 
 case class value(var_type: String, var_name: String, data_type: String, var_value: Any)
 
