@@ -3,7 +3,6 @@ package token
 import parser._
 import parser.ExprParser
 
-
 class Interpreter(val parser: ExprParser){
   def visit(node: AST): Int = {
     if (node.isInstanceOf[BinOp]) visit_BinOp(node.asInstanceOf[BinOp])
@@ -39,9 +38,11 @@ class Interpreter(val parser: ExprParser){
    else return 0
   }
   
-  def visit_Num(node: Num): Int = {
-    node.token.getToken().toInt
-  }
+  def visit_Num(node: Num): Int = node.token.getToken().toInt
+  
+  def visit_Bool(node: Bool): Boolean = node.token.getOriginalToken().toBoolean
+  
+  def visit_Alpha(node: Alpha): String = node.token.getOriginalToken()
   
   def interpret(): Int = {
     val tree = parser.parse()

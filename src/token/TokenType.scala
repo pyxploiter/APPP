@@ -4,9 +4,9 @@ package token
 object TokenType {
   sealed trait Type
   case object IDENTIFIER extends Type
-  case object INTEGER extends Type
-  case object BOOLEAN extends Type
-  case object ALPHA extends Type
+  case object INT_LITERAL extends Type
+  case object BOOL_LITERAL extends Type
+  case object ALPHA_LITERAL extends Type
   case object STRING extends Type
   case object ASSIGNMENT extends Type
   case object VARIABLE_TYPE extends Type
@@ -28,9 +28,5 @@ object TokenType {
   case object PLUS extends Type
   case object MUL extends Type
   case object DIV extends Type
-  
-  val typeoftokens = Seq(IDENTIFIER, INTEGER, BOOLEAN, ALPHA, STRING, 
-                        EMPTY, SPACE, ASSIGNMENT, VARIABLE_TYPE, 
-                        COLON, BOP, DATA_TYPE, RESERVED, BREAK, WHILE, DO, IF, THEN, ELSE,
-                        NIL, PRINT, PLUS, MUL, DIV)
+  case object SKIP extends Type
 }
