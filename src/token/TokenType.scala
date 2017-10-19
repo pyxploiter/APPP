@@ -9,7 +9,8 @@ object TokenType {
   case object ALPHA_LITERAL extends Type
   case object STRING extends Type
   case object ASSIGNMENT extends Type
-  case object VARIABLE_TYPE extends Type
+  case object VAR_TYPE extends Type
+  case object CONST_TYPE extends Type
   case object COLON extends Type
   case object EMPTY extends Type
   case object SPACE extends Type

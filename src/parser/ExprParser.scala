@@ -13,11 +13,15 @@ case class UnaryOp(val token: Token, expr_node: AST) extends AST
 case class Num(val token:Token) extends AST
 case class Bool(val token:Token) extends AST
 case class Alpha(val token:Token) extends AST
+case class VarDec(val left:AST, val token: Token, val right: AST) extends AST
 case class Assign(val left:AST, val token: Token, val right: AST) extends AST
 case class Var(val token: Token) extends AST
 case class Nil(val token:Token) extends AST
 case class Const(val token: Token) extends AST
 case class Compound(val children: List[AST]) extends AST
+case class IfElse(if_node: AST, then_node: AST, else_node: AST) extends AST
+case class WhileLoop(while_cond:AST, do_statement:AST) extends AST
+case class PrintStatement(statement:AST) extends AST
 
 class ExprParser(val tokenizer: Tokenizer) {
   val (cr_token, cr_token_pos): (Token,Int) = tokenizer.getNextToken(0)
@@ -68,12 +72,17 @@ class ExprParser(val tokenizer: Tokenizer) {
   
   //returning single statement node
   def statement(current_token:Token, current_token_pos:Int): (Token, Int, AST) = {
-    if (current_token.getType() == TokenType.VARIABLE_TYPE){
-      val (cur_token, cur_token_pos) = eat(current_token, TokenType.VARIABLE_TYPE,current_token_pos)
-      val (tok,pos,node) = delare_statement(cur_token, cur_token_pos)
+    //calling declaration statement
+    if (current_token.getType() == TokenType.VAR_TYPE){
+      val (tok,pos,node) = delare_statement(current_token, current_token_pos, 0)
+      return (tok,pos,node)
+    }
+    else if (current_token.getType() == TokenType.CONST_TYPE){
+      val (tok,pos,node) = delare_statement(current_token, current_token_pos, 1)
       return (tok,pos,node)
     }
     
+    //calling skip statement
     else if (current_token.getType() == TokenType.SKIP){
       val (cur_token, cur_token_pos) = eat(current_token, TokenType.SKIP,current_token_pos)
       val (cur_tok, cur_tok_pos) = eat(cur_token, TokenType.BREAK,cur_token_pos)
@@ -90,6 +99,28 @@ class ExprParser(val tokenizer: Tokenizer) {
       val (token, position) = skip_statement(cur_tok, cur_tok_pos)
       val (tok, pos) = eat(token, TokenType.BREAK,position)
       statement(tok,pos)
+    }
+
+    //calling if statement
+    else if (current_token.getType() == TokenType.IF){
+      val (tok, pos, node) = if_statement(current_token,current_token_pos)
+      return (tok, pos, node)
+    }
+    
+    //calling VarDec statment
+    else if (current_token.getType() == TokenType.IDENTIFIER){
+      val (tok, pos, node) = assign_statement(current_token, current_token_pos)
+      return (tok, pos, node)
+    }
+    
+    else if (current_token.getType() == TokenType.WHILE){
+      val (tok, pos, node) = while_statement(current_token, current_token_pos)
+      return (tok, pos, node)
+    }
+    
+    else if (current_token.getType() == TokenType.PRINT){
+      val (tok, pos, node) = print_statement(current_token, current_token_pos)
+      return (tok, pos, node)
     }
     
     else throw new Exception("No more statements, Probably program ended")
@@ -124,7 +155,8 @@ class ExprParser(val tokenizer: Tokenizer) {
     }
     
     else{
-     val (cur_token, cur_token_pos, node) = variable(current_token, current_token_pos)
+     val node = Var(current_token)
+     val (cur_token, cur_token_pos) = eat(current_token, current_token.getType(), current_token_pos)
      return (cur_token, cur_token_pos, node)
     }
     
@@ -134,6 +166,7 @@ class ExprParser(val tokenizer: Tokenizer) {
 //    }
   }
   
+  //parsing terms (terms having higher priority than expressions) 
   def term(current_token: Token, current_token_pos:Int): (Token, Int, AST) = {
     val (cur_token, cur_token_pos, left_node) = atom(current_token, current_token_pos)
     
@@ -159,30 +192,88 @@ class ExprParser(val tokenizer: Tokenizer) {
     return (tok,pos,node)
   }
   
+  //parsing expression
   def expr(current_token: Token, current_token_pos:Int): (Token, Int, AST) = {
     val (cur_token, cur_token_pos, left_AST) = term(current_token, current_token_pos)
     def recurse_expr(cur_token: Token, cur_token_pos: Int, left_AST: AST): (Token,Int,AST) = { 
-      if (cur_token.getType() == TokenType.PLUS){
+      if (cur_token.getType() == TokenType.BOP){
+        if(cur_token.getToken().equals("==") || cur_token.getToken().equals("<") || 
+            cur_token.getToken().equals(">") || cur_token.getToken().equals("><") || 
+            cur_token.getToken().equals("and") || cur_token.getToken().equals("or") ||
+            cur_token.getToken().equals("^")){
+          val (cur_tok, cur_tok_pos) = eat(cur_token, TokenType.BOP, cur_token_pos)
+          val (tok,pos,right_bin_op) = term(cur_tok, cur_tok_pos)
+          val next_node = BinOp(left_AST, cur_token, right_bin_op)
+          recurse_expr(tok, pos, next_node)
+        } else throw new Exception("Error: Boolean expression expected")
+      }
+      else if (cur_token.getType() == TokenType.PLUS){
         val (cur_tok, cur_tok_pos) = eat(cur_token, TokenType.PLUS, cur_token_pos)
         val (tok,pos,right_bin_op) = term(cur_tok, cur_tok_pos)
         val next_node = BinOp(left_AST, cur_token, right_bin_op)
         recurse_expr(tok, pos, next_node)
       }
-      else (cur_token,cur_token_pos,left_AST)
+        else (cur_token,cur_token_pos,left_AST)
     }
     val (tok, pos, node) = recurse_expr(cur_token, cur_token_pos, left_AST) 
     return (tok,pos,node)
   }
   
+  //parsing print statements
+  def print_statement(current_token: Token, current_token_pos: Int): (Token, Int, AST) = {
+    val (current_tok, current_tok_pos) = eat(current_token, TokenType.PRINT,current_token_pos)
+    val (cur_tok, cur_pos, expr_node) = expr(current_tok, current_tok_pos)
+    val print_node = PrintStatement(expr_node)
+    return (cur_tok, cur_pos, print_node)
+  }
+  
+  //parsing while statements
+  def while_statement(current_token: Token, current_token_pos: Int): (Token, Int, AST) = {
+    val (current_tok, current_tok_pos) = eat(current_token, TokenType.WHILE,current_token_pos)
+    val (cur_tok, cur_pos, expr_node) = expr(current_tok, current_tok_pos)
+    val (cur_token, cur_token_pos) = eat(cur_tok, TokenType.DO, cur_pos)
+    val (tok, pos, statement_node) = statement(cur_token, cur_token_pos)
+    val while_node = WhileLoop(expr_node, statement_node)
+    return (tok, pos, while_node)
+  }
+  
+  //parsing If-then-else statements
+  def if_statement(current_token: Token, current_token_pos: Int): (Token, Int, AST) = {
+      val (current_tok, current_tok_pos) = eat(current_token, TokenType.IF,current_token_pos)
+      val (cur_tok, cur_pos, expr_node) = expr(current_tok, current_tok_pos)
+      if (cur_tok.getType() == TokenType.THEN){
+        val (cur_token, cur_token_pos) = eat(cur_tok, TokenType.THEN, cur_pos)
+        val (tok, pos, statement_node) = statement(cur_token, cur_token_pos)
+        if (tok.getType() == TokenType.ELSE){
+          val (crtk, crtp) = eat(tok, TokenType.ELSE, pos)
+          val (tk, tp, second_statement_node) = statement(crtk, crtp)
+          val if_node = IfElse(expr_node,statement_node,second_statement_node)
+          return (tk, tp, if_node)
+        } else throw new Exception("Error: Expecting ELSE")
+      } else throw new Exception("Error: Expecting Then")
+  }
+  
+  //parsing assignment of already declared variables
+  def assign_statement(current_token: Token, current_token_pos: Int): (Token, Int, AST) = {
+    val left_node = Var(current_token)
+    val (cur_token, cur_token_pos) = eat(current_token, TokenType.IDENTIFIER, current_token_pos)
+    //val (cur_token, cur_token_pos,left_node) = variable(current_token, current_token_pos)
+    val (current_tok, current_tok_pos) = eat(cur_token, TokenType.ASSIGNMENT,cur_token_pos)
+    val (tok, pos, right_node) = expr(current_tok, current_tok_pos)
+    val next_node = Assign(left_node, current_tok, right_node)
+    return (tok, pos, next_node)
+  }
+  
   //parsing declaration statements
-  def delare_statement(current_token: Token, current_token_pos: Int): (Token, Int, AST) = {
-    val (cur_token, cur_token_pos,left_node) = variable(current_token, current_token_pos)
+  def delare_statement(current_token: Token, current_token_pos: Int, var_type:Int): (Token, Int, AST) = {
+    val (curr_tok, curr_tok_pos) = eat(current_token, current_token.getType(),current_token_pos)
+    val (cur_token, cur_token_pos,left_node) = variable(curr_tok, curr_tok_pos,var_type)
     val (current_tok, current_tok_pos) = eat(cur_token, TokenType.COLON,cur_token_pos)
     val data_type_token = current_tok
     val (cur_tok, cur_tok_pos) = eat(current_tok, TokenType.DATA_TYPE,current_tok_pos)
     if(cur_tok.getType() != TokenType.ASSIGNMENT){
       if (cur_tok.getType() == TokenType.BREAK){
-        val next_node = Assign(left_node, cur_token, null)
+        val next_node = VarDec(left_node, cur_token, null)
         return (cur_tok, cur_tok_pos, next_node)
       }
       else throw new Exception("Error: Invalid Assignment Statement")
@@ -209,17 +300,18 @@ class ExprParser(val tokenizer: Tokenizer) {
     }
     
     val (tok, pos, right_node) = expr(c_tok, tok_pos)
-    val next_node = Assign(left_node, cur_token, right_node)
+    val next_node = VarDec(left_node, cur_token, right_node)
     return (tok, pos, next_node)
   }
   
-  def variable(current_token: Token, current_token_pos: Int): (Token, Int, AST) = {
-    if (tokenizer.tokenList.apply(current_token_pos-2).getToken().equals("var")){
+  //defining variable node
+  def variable(current_token: Token, current_token_pos: Int, var_type:Int): (Token, Int, AST) = {
+    if (var_type==0){
       val node = Var(current_token)
       val (cur_token, cur_token_pos) = eat(current_token, TokenType.IDENTIFIER, current_token_pos)
       return (cur_token, cur_token_pos, node)
     }
-    else if (tokenizer.tokenList.apply(current_token_pos-2).getToken().equals("const")){ 
+    else if (var_type==1){ 
       val node = Const(current_token)
       val (cur_token, cur_token_pos) = eat(current_token, TokenType.IDENTIFIER, current_token_pos)
       return (cur_token, cur_token_pos, node)
@@ -228,7 +320,6 @@ class ExprParser(val tokenizer: Tokenizer) {
   }
   
   def parse(): AST = {
-    //val (tok,pos,tree) = expr(cr_token, cr_token_pos)
     val (tok,pos,tree) = compound_statement(cr_token, cr_token_pos)
     println(tree) 
     return tree

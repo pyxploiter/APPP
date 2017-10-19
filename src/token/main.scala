@@ -5,16 +5,18 @@ import parser._
 
 object main {
   def main(args: Array[String]) {
-    //val print: PrintParser = new PrintParser("print \"This6656 is print parser\"")
-    //print.parse()
     val codeFile = Source.fromFile("examples/if.appp")
     val sourceCode = codeFile.mkString
 	  //println(sourceCode)  
-    val str:String = "var y:alpha;skip; const uzair:int=0; var asad:bool=tt; "
+    val str:String = "var x:int=6"
 	  val tokenizer: Tokenizer = new Tokenizer(str)
     //tokenizer.tokenize(str).map(f=> println(f.getToken()+" "+f.getType()) )
     val parser: ExprParser = new ExprParser(tokenizer)
-    val interpreter = new Interpreter(parser)
+    
+    val id_value = new value("var", "int","x", 1)
+    val var_table = Map("x"->id_value).withDefaultValue((new value("null","null","null","null")))
+    
+    val interpreter = new Interpreter(parser, var_table)
     println(interpreter.interpret())
   }
 }
