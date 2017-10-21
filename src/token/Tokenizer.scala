@@ -12,15 +12,16 @@ class Tokenizer(code: String) {
   //creating list of all token regex
   def createTokenRegex(): List[TokenData] = {
     val _space = new TokenData(" ".r, TokenType.SPACE)
-    val _break = new TokenData("\\n|;".r, TokenType.BREAK)
-    val _int_literal = new TokenData("^(-?[0-9]+)$".r, TokenType.INT_LITERAL)
+    val _break = new TokenData("""\n|;""".r, TokenType.BREAK)
+    val _int_literal = new TokenData("-?\\d+".r, TokenType.INT_LITERAL)
     val _bool_literal = new TokenData("^(tt|ff)$".r, TokenType.BOOL_LITERAL)
     val _alpha_literal = new TokenData("^([\"|\']).*([\"|\'])$".r, TokenType.ALPHA_LITERAL)
     val _plus = new TokenData("\\+".r, TokenType.PLUS)
     val _multiply = new TokenData("\\*".r, TokenType.MUL)
     val _divide = new TokenData("\\/".r, TokenType.DIV)
+    val _sub = new TokenData("-{1}".r, TokenType.SUB)
     val _bop = new TokenData("==|><|and|or|\\^|>|<".r, TokenType.BOP)
-    val _uop = new TokenData("-|not".r, TokenType.UOP)
+    val _uop = new TokenData("~|not".r, TokenType.UOP)
     val _assign_op = new TokenData("[=]{1}".r, TokenType.ASSIGNMENT)
     val _colon = new TokenData("[:]{1}".r, TokenType.COLON)
     val _while = new TokenData("(while)".r, TokenType.WHILE)
@@ -35,7 +36,7 @@ class Tokenizer(code: String) {
     val _var_type = new TokenData("(var)".r, TokenType.VAR_TYPE)
     val _const_type = new TokenData("(const)".r, TokenType.CONST_TYPE)
     val _skip = new TokenData("^(skip)$".r, TokenType.SKIP)
-    val finalList = List( _break,_var_type,_const_type,_skip, _print, _while, _do, _if, _then, _else, _colon, _data_type ,_uop, _int_literal , _plus, _multiply, _divide, _bop,_assign_op, _alpha_literal, _bool_literal , _nil, _identifier )
+    val finalList = List( _break,_var_type,_const_type,_skip, _print, _while, _do, _if, _then, _else, _colon, _data_type ,_uop ,  _sub,_alpha_literal,_int_literal,_plus, _multiply, _divide, _bop,_assign_op, _bool_literal , _nil, _identifier )
     return finalList
   }
   

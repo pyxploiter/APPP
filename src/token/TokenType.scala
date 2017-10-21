@@ -28,6 +28,7 @@ object TokenType {
   case object PRINT extends Type
   case object PLUS extends Type
   case object MUL extends Type
+  case object SUB extends Type
   case object DIV extends Type
   case object SKIP extends Type
 }

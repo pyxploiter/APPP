@@ -5,38 +5,21 @@ import token.TokenType
 import token.Tokenizer
 import scala.util.{ Try, Success, Failure }
 
-//type Environment = String => Int
-trait AST
-
-case class BinOp(val left: AST, val token: Token, val right: AST) extends AST
-case class UnaryOp(val token: Token, expr_node: AST) extends AST
-case class Num(val token:Token) extends AST
-case class Bool(val token:Token) extends AST
-case class Alpha(val token:Token) extends AST
-case class VarDec(val left:AST, val token: Token, val right: AST) extends AST
-case class Assign(val left:AST, val token: Token, val right: AST) extends AST
-case class Var(val token: Token) extends AST
-case class Nil(val token:Token) extends AST
-case class Const(val token: Token) extends AST
-case class Compound(val children: List[AST]) extends AST
-case class IfElse(if_node: AST, then_node: AST, else_node: AST) extends AST
-case class WhileLoop(while_cond:AST, do_statement:AST) extends AST
-case class PrintStatement(statement:AST) extends AST
-
-class ExprParser(val tokenizer: Tokenizer) {
+class Parser(val tokenizer: Tokenizer) {
   val (cr_token, cr_token_pos): (Token,Int) = tokenizer.getNextToken(0)
   
   def eat(current_token: Token, token_type: TokenType.Type, current_token_pos:Int): (Token, Int) = {
+    //println(current_token.getToken())
     if (current_token.getType() == token_type){ 
       return tokenizer.getNextToken(current_token_pos)
     }
    else throw new Exception("Eat Error")
   }
   
-  //compound statement is actually root of parse tree
+  //AbstractSyntaxTree statement is actually root of parse tree
   def compound_statement(current_token: Token, current_token_pos: Int): (Token, Int, AST) = {
     val (cur_token, cur_token_pos, nodes) = statement_list(current_token, current_token_pos)
-    val root = Compound(nodes)
+    val root = AbstractSyntaxTree(nodes)
     return (cur_token, cur_token_pos,root)
   }
   
@@ -48,6 +31,7 @@ class ExprParser(val tokenizer: Tokenizer) {
     def get_next_statement(token: Token, token_pos: Int, resultx: List[AST]): (Token, Int, List[AST]) = {
       if (token.getType() == TokenType.BREAK){
         val (cur_token, cur_token_pos) = eat(token, TokenType.BREAK,token_pos)
+        
         if (cur_token_pos != token_pos){
           val (cur_tok, cur_tok_pos, node) = statement(cur_token, cur_token_pos)
           val new_list: List[AST] = resultx :+ node
@@ -61,7 +45,7 @@ class ExprParser(val tokenizer: Tokenizer) {
           return (token, token_pos, resultx)
         }
         else{
-          throw new Exception("Error: Semi colon missing") //if semicolon is missing
+          throw new Exception("Error: Expecting Semi Colon.") //if semicolon is missing
         }
       }
     }
@@ -107,10 +91,29 @@ class ExprParser(val tokenizer: Tokenizer) {
       return (tok, pos, node)
     }
     
-    //calling VarDec statment
+    
     else if (current_token.getType() == TokenType.IDENTIFIER){
-      val (tok, pos, node) = assign_statement(current_token, current_token_pos)
-      return (tok, pos, node)
+      //println(current_token.getToken())
+      if(tokenizer.lookAhead(current_token_pos)._1.getToken().equals("=")){
+        val (tok, pos, node) = assign_statement(current_token, current_token_pos)
+        return (tok, pos, node)
+      } else if((("-|==|><|and|or|\\^|>|<|\\+|\\/|\\*").r.pattern.matcher(tokenizer.lookAhead(current_token_pos)._1.getToken())).find()) {
+        val (tok, pos, node) = expr(current_token, current_token_pos)
+        return (tok, pos, node)
+      } else {
+        val (tok, pos, node) = variable(current_token, current_token_pos, 0)
+        return (tok, pos, node)
+      }
+    }
+    
+    else if (current_token.getType() == TokenType.ALPHA_LITERAL || current_token.getType() == TokenType.BOOL_LITERAL || current_token.getType() == TokenType.INT_LITERAL ){
+      if((("-|==|><|and|or|\\^|>|<|\\+|\\/|\\*").r.pattern.matcher(tokenizer.lookAhead(current_token_pos)._1.getToken())).find()){
+        val (tok, pos, node) = expr(current_token, current_token_pos)
+        return (tok,pos, node)
+      } else {
+        val (tok, pos, node) = atom(current_token, current_token_pos)
+        return (tok, pos, node)
+      }
     }
     
     else if (current_token.getType() == TokenType.WHILE){
@@ -128,42 +131,39 @@ class ExprParser(val tokenizer: Tokenizer) {
   
   //returning atomic value
   def atom(current_token: Token, current_token_pos:Int): (Token, Int, AST) = {
-    if (current_token.getType() == TokenType.UOP){
-      val (cur_token, cur_token_pos) = eat(current_token, TokenType.UOP, current_token_pos)
-      val (cur_tok, cur_pos, node) = atom(cur_token, cur_token_pos)
-      return (cur_tok, cur_pos, UnaryOp(current_token, node))
+    current_token.getType() match {
+      case TokenType.UOP => {
+        val (cur_token, cur_token_pos) = eat(current_token, TokenType.UOP, current_token_pos)
+        val (cur_tok, cur_pos, node) = atom(cur_token, cur_token_pos)
+        return (cur_tok, cur_pos, UnaryOp(current_token, node))
+      }
+      
+      case TokenType.INT_LITERAL => {
+        val (cur_token, cur_token_pos) = eat(current_token, TokenType.INT_LITERAL, current_token_pos)
+        return (cur_token, cur_token_pos, Num(current_token))
+      }
+      
+      case TokenType.BOOL_LITERAL => {
+        val (cur_token, cur_token_pos) = eat(current_token, TokenType.BOOL_LITERAL, current_token_pos)
+        return (cur_token, cur_token_pos, Bool(current_token))
+      }
+      
+      case TokenType.ALPHA_LITERAL => {
+        val (cur_token, cur_token_pos) = eat(current_token, TokenType.ALPHA_LITERAL, current_token_pos)
+        return (cur_token, cur_token_pos, Alpha(current_token))
+      }
+      
+      case TokenType.NIL => {
+        val (cur_token, cur_token_pos) = eat(current_token, TokenType.NIL, current_token_pos)
+        return (cur_token, cur_token_pos, Nil(current_token))
+      }
+      
+      case _ => {
+        val node = Var(current_token)
+        val (cur_token, cur_token_pos) = eat(current_token, current_token.getType(), current_token_pos)
+        return (cur_token, cur_token_pos, node)
+      }
     }
-    
-    else if(current_token.getType() == TokenType.INT_LITERAL){
-      val (cur_token, cur_token_pos) = eat(current_token, TokenType.INT_LITERAL, current_token_pos)
-      return (cur_token, cur_token_pos, Num(current_token))
-    }
-    
-    else if(current_token.getType() == TokenType.BOOL_LITERAL){
-      val (cur_token, cur_token_pos) = eat(current_token, TokenType.BOOL_LITERAL, current_token_pos)
-      return (cur_token, cur_token_pos, Bool(current_token))
-    }
-    
-    else if(current_token.getType() == TokenType.ALPHA_LITERAL){
-      val (cur_token, cur_token_pos) = eat(current_token, TokenType.ALPHA_LITERAL, current_token_pos)
-      return (cur_token, cur_token_pos, Alpha(current_token))
-    }
-    
-    else if(current_token.getType() == TokenType.NIL){
-      val (cur_token, cur_token_pos) = eat(current_token, TokenType.NIL, current_token_pos)
-      return (cur_token, cur_token_pos, Nil(current_token))
-    }
-    
-    else{
-     val node = Var(current_token)
-     val (cur_token, cur_token_pos) = eat(current_token, current_token.getType(), current_token_pos)
-     return (cur_token, cur_token_pos, node)
-    }
-    
-//    else if(current_token.getType() == TokenType.BOOLEAN){
-//      val (cur_token, cur_token_pos) = eat(current_token, TokenType.BOOLEAN, current_token_pos)
-//      return (cur_token, cur_token_pos, Bool(current_token))
-//    }
   }
   
   //parsing terms (terms having higher priority than expressions) 
@@ -213,6 +213,14 @@ class ExprParser(val tokenizer: Tokenizer) {
         val next_node = BinOp(left_AST, cur_token, right_bin_op)
         recurse_expr(tok, pos, next_node)
       }
+      
+      else if (cur_token.getType() == TokenType.SUB){
+        val (cur_tok, cur_tok_pos) = eat(cur_token, TokenType.SUB, cur_token_pos)
+        val (tok,pos,right_bin_op) = term(cur_tok, cur_tok_pos)
+        val next_node = BinOp(left_AST, cur_token, right_bin_op)
+        recurse_expr(tok, pos, next_node)
+      }
+      
         else (cur_token,cur_token_pos,left_AST)
     }
     val (tok, pos, node) = recurse_expr(cur_token, cur_token_pos, left_AST) 
@@ -222,7 +230,7 @@ class ExprParser(val tokenizer: Tokenizer) {
   //parsing print statements
   def print_statement(current_token: Token, current_token_pos: Int): (Token, Int, AST) = {
     val (current_tok, current_tok_pos) = eat(current_token, TokenType.PRINT,current_token_pos)
-    val (cur_tok, cur_pos, expr_node) = expr(current_tok, current_tok_pos)
+    val (cur_tok, cur_pos, expr_node) = statement(current_tok, current_tok_pos)
     val print_node = PrintStatement(expr_node)
     return (cur_tok, cur_pos, print_node)
   }
@@ -232,7 +240,7 @@ class ExprParser(val tokenizer: Tokenizer) {
     val (current_tok, current_tok_pos) = eat(current_token, TokenType.WHILE,current_token_pos)
     val (cur_tok, cur_pos, expr_node) = expr(current_tok, current_tok_pos)
     val (cur_token, cur_token_pos) = eat(cur_tok, TokenType.DO, cur_pos)
-    val (tok, pos, statement_node) = statement(cur_token, cur_token_pos)
+    val (tok, pos, statement_node) = statement_list(cur_token, cur_token_pos)
     val while_node = WhileLoop(expr_node, statement_node)
     return (tok, pos, while_node)
   }
@@ -273,14 +281,14 @@ class ExprParser(val tokenizer: Tokenizer) {
     val (cur_tok, cur_tok_pos) = eat(current_tok, TokenType.DATA_TYPE,current_tok_pos)
     if(cur_tok.getType() != TokenType.ASSIGNMENT){
       if (cur_tok.getType() == TokenType.BREAK){
-        val next_node = VarDec(left_node, cur_token, null)
+        val next_node = VarDec(left_node, cur_token, Nil(new Token("",TokenType.NIL)))
         return (cur_tok, cur_tok_pos, next_node)
       }
       else throw new Exception("Error: Invalid Assignment Statement")
     }
     val (c_tok, tok_pos) = eat(cur_tok, TokenType.ASSIGNMENT,cur_tok_pos)
     if (data_type_token.getToken().equals("int")){
-      Try(c_tok.getToken().toInt).getOrElse(
+      Try(c_tok.getToken().r.pattern.matcher("-?[0-9]+$").find()).getOrElse(
           if(c_tok.getType() == TokenType.NIL) Success
           else if(c_tok.getType() == TokenType.IDENTIFIER) Success
           else throw new Exception("Error: Value should be Integer")
