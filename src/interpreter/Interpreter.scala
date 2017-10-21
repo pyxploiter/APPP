@@ -7,6 +7,7 @@ import token.TokenType
 case class value(var_type: String, var_name: String, data_type: String, var_value: Int)
 
 class Interpreter(val parser: Parser, val var_table: Map[String, value]){
+  //visiting each node of ASR
   def visit(node: AST, var_table: Map[String, value]): (Int,Map[String,value]) = {
     try{
       if (node.isInstanceOf[BinOp]) evaluate_BinOp(node.asInstanceOf[BinOp], var_table)

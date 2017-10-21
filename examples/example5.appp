@@ -1,0 +1,2 @@
+var myVar:int=0;
+while myVar<10000000 do myVar=myVar+1; print myVar

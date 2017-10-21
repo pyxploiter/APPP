@@ -8,6 +8,7 @@ import scala.util.{ Try, Success, Failure }
 class Parser(val tokenizer: Tokenizer) {
   val (cr_token, cr_token_pos): (Token,Int) = tokenizer.getNextToken(0)
   
+  //removing the current token which has been used
   def eat(current_token: Token, token_type: TokenType.Type, current_token_pos:Int): (Token, Int) = {
     try{
       if (current_token.getType() == token_type)
@@ -348,7 +349,7 @@ class Parser(val tokenizer: Tokenizer) {
   
   def parse(): AST = {
     val (tok,pos,tree) = compound_statement(cr_token, cr_token_pos) 
-    println(tree)
+    //println(tree)
     return tree
   }
 }
