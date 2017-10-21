@@ -1,9 +1,15 @@
 package token
 
-class Token(val tokenx: String,val Typex: TokenType.EnumVal) {
-  private val token:String = tokenx;
-  private val Type: TokenType.EnumVal = Typex;
+class Token(val tokenx: String,val Typex: TokenType.Type) {
+  private val token: String = tokenx;
+  private val Type: TokenType.Type = Typex;
   
-  def getToken(): String = token
-  def getType(): TokenType.EnumVal = Type
+  def getToken() = token
+  def getOriginalToken():String = {
+    if (Type == TokenType.BOOL_LITERAL){
+      if (token.equals("tt")) "true"
+      else "false"
+    } else token
+  }
+  def getType(): TokenType.Type = Type
 }
