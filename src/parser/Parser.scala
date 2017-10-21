@@ -95,7 +95,6 @@ class Parser(val tokenizer: Tokenizer) {
         return (tok, pos, node)
       }
       
-      
       else if (current_token.getType() == TokenType.IDENTIFIER){
         if(tokenizer.lookAhead(current_token_pos)._1.getToken().equals("=")){
           val (tok, pos, node) = assign_statement(current_token, current_token_pos)
@@ -107,6 +106,11 @@ class Parser(val tokenizer: Tokenizer) {
           val (tok, pos, node) = variable(current_token, current_token_pos, 0)
           return (tok, pos, node)
         }
+      }
+      
+      else if (current_token.getType() == TokenType.UOP){
+        val (tok, pos, node) = atom(current_token, current_token_pos)
+        return (tok, pos, node)
       }
       
       else if (current_token.getType() == TokenType.ALPHA_LITERAL || current_token.getType() == TokenType.BOOL_LITERAL || current_token.getType() == TokenType.INT_LITERAL ){
@@ -160,7 +164,7 @@ class Parser(val tokenizer: Tokenizer) {
       
       case TokenType.NIL => {
         val (cur_token, cur_token_pos) = eat(current_token, TokenType.NIL, current_token_pos)
-        return (cur_token, cur_token_pos, Nil(current_token))
+        return (cur_token, cur_token_pos, Nil(current_token,current_token.getType()))
       }
       
       case _ => {
@@ -292,7 +296,7 @@ class Parser(val tokenizer: Tokenizer) {
     if(cur_tok.getType() != TokenType.ASSIGNMENT){
       try{
         if (cur_tok.getType() == TokenType.BREAK){
-          val next_node = VarDec(left_node, cur_token, Nil(new Token("",TokenType.NIL)))
+          val next_node = VarDec(left_node, cur_token, Nil(new Token("",TokenType.NIL), data_type_token.getType()))
           return (cur_tok, cur_tok_pos, next_node)
         }
         else throw new Exception()
@@ -300,7 +304,7 @@ class Parser(val tokenizer: Tokenizer) {
     }
     val (c_tok, tok_pos) = eat(cur_tok, TokenType.ASSIGNMENT,cur_tok_pos)
     if (data_type_token.getToken().equals("int")){
-      Try(c_tok.getToken().r.pattern.matcher("-?[0-9]+$").find()).getOrElse(
+      Try(c_tok.getToken().toInt).getOrElse(
           try{
             if(c_tok.getType() == TokenType.NIL) Success
             else if(c_tok.getType() == TokenType.IDENTIFIER) Success
