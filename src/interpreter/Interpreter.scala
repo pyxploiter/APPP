@@ -40,7 +40,6 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
   
   // evaluating variable declaration node
   def evaluate_VarDec(node: VarDec, var_table: Map[String, value]): (Int, Map[String,value]) = {
-      
     val var_name = if (node.left.isInstanceOf[Var]) node.left.asInstanceOf[Var].token.getToken() else node.left.asInstanceOf[Const].token.getToken() 
     val var_value = var_table(var_name)
     if (!var_value.var_name.equals("null")) throw new Exception("Variable \""+var_name+"\" is already declared")
@@ -48,7 +47,6 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
     val new_value = if(node.left.isInstanceOf[Var]) new value("var", var_name, "int" ,right_node._1) else new value("const", var_name, "int" ,right_node._1)
     val new_var_table = var_table+(var_name -> new_value)
     return (1, new_var_table)
-    
   }
   
   // evaluating assignment node
@@ -146,7 +144,7 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
         else if (node.token.getType()==TokenType.SUB) return ((visit(node.left,var_table)._1 - visit(node.right,var_table)._1), var_table)
         else if (node.token.getType()==TokenType.BOP){
           node.token.getToken() match {
-             case "^" => (Math.pow(visit(node.left,var_table)._1, visit(node.right,var_table)._1).toInt, var_table)
+             case "^" => return (Math.pow(visit(node.left,var_table)._1, visit(node.right,var_table)._1).toInt, var_table);
              case "==" => if (visit(node.left,var_table)._1 == visit(node.right,var_table)._1) return (1,var_table) else return (0,var_table) 
              case "><" => if (visit(node.left,var_table)._1 != visit(node.right,var_table)._1) return (1,var_table) else return (0,var_table) 
              case ">" => if (visit(node.left,var_table)._1 > visit(node.right,var_table)._1) return (1,var_table) else return (0,var_table)

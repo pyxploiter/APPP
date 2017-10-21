@@ -31,7 +31,6 @@ class Parser(val tokenizer: Tokenizer) {
     def get_next_statement(token: Token, token_pos: Int, resultx: List[AST]): (Token, Int, List[AST]) = {
       if (token.getType() == TokenType.BREAK){
         val (cur_token, cur_token_pos) = eat(token, TokenType.BREAK,token_pos)
-        
         if (cur_token_pos != token_pos){
           val (cur_tok, cur_tok_pos, node) = statement(cur_token, cur_token_pos)
           val new_list: List[AST] = resultx :+ node
@@ -49,7 +48,7 @@ class Parser(val tokenizer: Tokenizer) {
             throw new Exception() //invalid statement
           }
         }
-        catch {case ex:Exception => println("Error: Invalid Statement"); exit}
+        catch {case ex:Exception => println("Error: Invalid Statement parser"); exit}
       }
     }
     
