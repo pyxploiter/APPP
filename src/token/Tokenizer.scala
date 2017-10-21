@@ -51,7 +51,9 @@ class Tokenizer(code: String) {
   
   //returning next token in given string
   def getTokens(code: String, tokenRegexList: List[TokenData]) : (String, Token, String) = {
-    if (tokenRegexList.isEmpty) throw new Exception("Syntax Error")
+    try if (tokenRegexList.isEmpty) throw new Exception()
+    catch {case ex:Exception => println("Error: Syntax Error"); exit;}
+    
     val matcher = tokenRegexList.head.getPattern().pattern.matcher(code)
     if (matcher.find()) 
       (code.substring(0,matcher.start()),new Token(code.substring(matcher.start(),matcher.end()), tokenRegexList.head.getType()),code.substring(matcher.end()))

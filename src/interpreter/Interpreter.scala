@@ -8,24 +8,25 @@ case class value(var_type: String, var_name: String, data_type: String, var_valu
 
 class Interpreter(val parser: Parser, val var_table: Map[String, value]){
   def visit(node: AST, var_table: Map[String, value]): (Int,Map[String,value]) = {
-    //println(node.getClass)
-    if (node.isInstanceOf[BinOp]) evaluate_BinOp(node.asInstanceOf[BinOp], var_table)
-    else if (node.isInstanceOf[UnaryOp]) evaluate_UnaryOp(node.asInstanceOf[UnaryOp], var_table)
-    else if (node.isInstanceOf[Num]) evaluate_Num(node.asInstanceOf[Num], var_table)
-    else if (node.isInstanceOf[Bool]) evaluate_Bool(node.asInstanceOf[Bool], var_table)
-    else if (node.isInstanceOf[Alpha]) evaluate_Alpha(node.asInstanceOf[Alpha], var_table)
-    else if (node.isInstanceOf[VarDec]) evaluate_VarDec(node.asInstanceOf[VarDec], var_table)
-    else if (node.isInstanceOf[Assign]) evaluate_Assign(node.asInstanceOf[Assign], var_table)
-    else if (node.isInstanceOf[Var]) evaluate_Var(node.asInstanceOf[Var], var_table)
-    else if (node.isInstanceOf[IfElse]) evaluate_If(node.asInstanceOf[IfElse], var_table)
-    else if (node.isInstanceOf[WhileLoop]) evaluate_While(node.asInstanceOf[WhileLoop], var_table)
-    else if (node.isInstanceOf[PrintStatement]) evaluate_Print(node.asInstanceOf[PrintStatement], var_table)
-    else if (node.isInstanceOf[Nil]) (0,var_table)
-    else throw new Exception("Invalid node")
+    try{
+      if (node.isInstanceOf[BinOp]) evaluate_BinOp(node.asInstanceOf[BinOp], var_table)
+      else if (node.isInstanceOf[UnaryOp]) evaluate_UnaryOp(node.asInstanceOf[UnaryOp], var_table)
+      else if (node.isInstanceOf[Num]) evaluate_Num(node.asInstanceOf[Num], var_table)
+      else if (node.isInstanceOf[Bool]) evaluate_Bool(node.asInstanceOf[Bool], var_table)
+      else if (node.isInstanceOf[Alpha]) evaluate_Alpha(node.asInstanceOf[Alpha], var_table)
+      else if (node.isInstanceOf[VarDec]) evaluate_VarDec(node.asInstanceOf[VarDec], var_table)
+      else if (node.isInstanceOf[Assign]) evaluate_Assign(node.asInstanceOf[Assign], var_table)
+      else if (node.isInstanceOf[Var]) evaluate_Var(node.asInstanceOf[Var], var_table)
+      else if (node.isInstanceOf[IfElse]) evaluate_If(node.asInstanceOf[IfElse], var_table)
+      else if (node.isInstanceOf[WhileLoop]) evaluate_While(node.asInstanceOf[WhileLoop], var_table)
+      else if (node.isInstanceOf[PrintStatement]) evaluate_Print(node.asInstanceOf[PrintStatement], var_table)
+      else if (node.isInstanceOf[Nil]) (0,var_table)
+      else throw new Exception()
+    } catch {case ex:Exception => println("Error: Invalid Statement"); exit}
   }
   
-  // giving evaluation commands to each statment one by one
-  def evaluate_Compound(node: AbstractSyntaxTree, var_table: Map[String, value]) = {
+  // evaluating complete Abstract syntax tree
+  def evaluate_AST(node: AbstractSyntaxTree, var_table: Map[String, value]) = {
     def evaluate_nodes(node: List[AST], var_table: Map[String, value]){
       //println(node)
       if(!node.isEmpty){
@@ -52,6 +53,7 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
   
   // evaluating assignment node
   def evaluate_Assign(node: Assign, var_table: Map[String,value]): (Int,Map[String,value]) = {
+    try{
     if((var_table.apply(node.left.asInstanceOf[Var].token.getToken()).var_type).equals("var")){
       val var_name = node.left.asInstanceOf[Var].token.getToken()
       val var_value = var_table(var_name)
@@ -62,9 +64,8 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
       val new_var_table = var_table.+(var_name -> (new value(var_value.var_type, var_value.var_name, var_value.data_type, right_node)))
       return (1, new_var_table)
     }
-    else{
-      throw new Exception("Const value can not be changed")
-    }
+    else throw new Exception()
+    } catch {case ex:Exception => println("Error: Reassigning 'const' is not allowed"); exit}
   }
   
   // getting variable value from Var node
@@ -75,25 +76,20 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
         return (int_value, var_table)
       }
       else throw new Exception()
-    } catch {
-      case ex: Exception => println("Error: variable \""+node.token.getToken()+"\" not found")
-      exit
-    } 
+    } catch { case ex: Exception => println("Error: variable \""+node.token.getToken()+"\" not found"); exit } 
     return (0, var_table)
   }
   
   // evaluating print node
   def evaluate_Print(node: PrintStatement, var_table: Map[String, value]):(Int, Map[String,value]) = {
     val answer = visit(node.statement, var_table)._1
-    if(!node.statement.isInstanceOf[Alpha]){
+    if(!node.statement.isInstanceOf[Alpha])
       println(answer)
-    }
     return (1, var_table)
   }
   
   // evaluating while-loop node
   def evaluate_While(node: WhileLoop, var_table: Map[String, value]):(Int, Map[String,value]) = {
-    
     def recurse_do(ans:Int, var_table : Map[String, value] ): (Int, Map[String, value])={
       if (visit(node.while_cond,var_table)._1 != 0){
         def recurse_do_statements(ans:Int, var_table: Map[String,value], statements: List[AST]): (Int, Map[String, value]) = {
@@ -109,7 +105,6 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
       }
       else return (ans,var_table) 
     }
-    
     val (final_ans,final_table)= recurse_do(0,var_table)
     return (final_ans,final_table)
   }
@@ -137,16 +132,12 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
         else return (-visit(node.expr_node, var_table)._1,var_table)
       }
       else throw new Exception()
-   } catch {
-     case ex: Exception => println("Invalid unary operation")
-     exit
-   }
+   } catch { case ex: Exception => println("Error: Invalid operation. Only '~' and 'not' unary operators are allowed"); exit }
    return (0,var_table)
   }
   
   // evaluating binary operations
   def evaluate_BinOp(node: BinOp, var_table: Map[String, value]): (Int, Map[String,value]) = {
-    //if ((node.right.getClass() == node.left.getClass()) && !(node.left.getClass().toString.equals("class parser.Alpha"))){
     try{  
       if (!node.left.getClass().toString.equals("class parser.Alpha") && !node.right.getClass().toString.equals("class parser.Alpha")){
         if(node.token.getType()==TokenType.PLUS) return (((visit(node.left,var_table)._1) + (visit(node.right,var_table)._1)), var_table)
@@ -166,12 +157,8 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
         }
       }
       else throw new Exception()
-    } catch {
-      case ex:Exception => println("Invalid operands")
-      exit
-    }
+    } catch { case ex:Exception => println("Error: Invalid operands in binary operation"); exit }
     return (0, var_table) //never returned
-    //} else throw new Exception("Invalid Binary Operation")
   }
   
   // evaluating integer node
@@ -183,12 +170,13 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
   // evaluating Alpha node
   def evaluate_Alpha(node: Alpha, var_table: Map[String, value]): (Int, Map[String,value]) = {
     print(node.token.getToken().substring(1, node.token.getToken().length()-1))
-    return (1, var_table) //String = node.token.getOriginalToken()
+    return (1, var_table) 
   }
   
   // interpreting the tree
-  def interpret(): Any = {
+  def interpret(): Boolean = {
     val tree = parser.parse()
-    return evaluate_Compound(tree.asInstanceOf[AbstractSyntaxTree], var_table)
+    evaluate_AST(tree.asInstanceOf[AbstractSyntaxTree], var_table)
+    return true
   }
 }

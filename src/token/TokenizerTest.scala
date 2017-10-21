@@ -1,28 +1,26 @@
-//package token
+package token
 import org.junit.Assert._
 import org.junit.Test
 import org.junit._
-import scala.annotation.meta.getter
 
 class TokenizerTest {
-  @(Rule @getter)
-  def thrown = rules.ExpectedException.none()
-  
+  val tokenizer: Tokenizer = new Tokenizer("")
   @Test
   def tokenizeTest{
-    //test 1 : prime numbers upto 20
-    val expected = List(2,3,5,7,11,13,17,19)
-    //assertEquals(expected,actual)
-    
-    //test 2 : prime numbers upto 2
-    val expected1 = List(2)
-    //assertEquals(expected,actual)
-  }
+    val input = "var x:int = 10"
+    val true_expected = List("var","x",":","int","=","10")
+    val false_expected = List("const","x",":","int","+","11") 
+    val tokens = tokenizer.tokenize(input)
+    val result = tokens.map(_.getToken())
+    assertEquals(true_expected, result)  
+    assertNotEquals(false_expected, result)
+  } 
   
-  //exception test
   @Test
-  def sieveExceptionTest{
-    thrown.expect(classOf[IllegalArgumentException])
-    //sieve.sieve_prime(1)
+  def getNextTokenTest{
+    val input = "const x:int = 5"
+    val true_expected = List("const","x",":","int","=","5")
+    val last_token = tokenizer.getNextToken(true_expected.length)._1.getToken()
+    assertEquals(last_token, "EOF")
   }
 }
