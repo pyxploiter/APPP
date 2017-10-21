@@ -1,4 +1,4 @@
-package runtime
+package test
 import org.junit.Assert._
 import org.junit.Test
 import org.junit._

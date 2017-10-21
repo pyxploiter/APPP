@@ -1,7 +1,8 @@
-package token
+package test
 import org.junit.Assert._
 import org.junit.Test
 import org.junit._
+import token.Tokenizer
 
 class TokenizerTest {
   val tokenizer: Tokenizer = new Tokenizer("")
