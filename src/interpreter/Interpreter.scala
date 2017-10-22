@@ -135,7 +135,7 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
   
   // evaluating if-else node
   def evaluate_If(node: IfElse, var_table: Map[String, value]):(Any, Map[String,value]) = {
-    if(visit(node.if_node, var_table)._1 != false){
+    if(visit(node.if_node, var_table)._1 != 0){
       val answer = visit(node.then_node, var_table)._1
       return (answer, var_table)
     } else {
