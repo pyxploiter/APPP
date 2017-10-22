@@ -33,7 +33,7 @@ class Parser(val tokenizer: Tokenizer) {
       if (token.getToken().equals("\n") && while_flag){
         return (token, token_pos,resultx)
       }
-      else if (token.getToken().equals(";") || (token.getToken().equals("\n")||tokenizer.lookAhead(token_pos).equals("\n"))){
+      else if (token.getToken().equals(";") || token.getToken().equals("\n")){
         val (cur_token, cur_token_pos) = eat(token, TokenType.BREAK,token_pos)
         if (cur_token_pos != token_pos){
           val (c_tok, c_tok_pos) = if (cur_token.getType() == TokenType.BREAK) eat(cur_token, TokenType.BREAK,cur_token_pos) else (cur_token,cur_token_pos)
