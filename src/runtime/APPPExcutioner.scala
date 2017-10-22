@@ -8,8 +8,9 @@ import token.Tokenizer
 object main {
   def main(args: Array[String]) {
     val var_table = Map[String,value]().withDefaultValue((new value("null","null","null",0)))
-    val codeFile = Source.fromFile("examples/example6.appp").mkString
-    //val codeFile = """var x:int = 10; while x>0 do x=x-1; skip; print x; print x+10"""
+    //val codeFile = Source.fromFile("examples/example5.appp").mkString
+    val codeFile = """var x:int = 10; skip; while x>0 do x=x-1; print x;
+    if x<5 then print "x greater than 5" else print "x less than 5";"""
     val tokenizer: Tokenizer = new Tokenizer(codeFile)
     //tokenizer.tokenize(codeFile).map(f => println(f.getToken()+" "+f.getType()))
     val parser: Parser = new Parser(tokenizer)

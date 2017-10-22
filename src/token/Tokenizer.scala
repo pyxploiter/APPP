@@ -6,13 +6,14 @@ class Tokenizer(code: String) {
   val tokenRegexList: List[TokenData] = createTokenRegex()
   val sourceCode: String = code
   val tokenList: List[Token] = tokenize(sourceCode)
-//  val no_statements = tokenList.count(_.getToken()==";")
-//  println("No of statements: "+no_statements)
+  //val no_statements = tokenList.count(_.getToken()==";")
+  //println("No of statements: "+no_statements)
   
   //creating list of all token regex
   def createTokenRegex(): List[TokenData] = {
     val _space = new TokenData(" ".r, TokenType.SPACE)
-    val _break = new TokenData("""\n|;""".r, TokenType.BREAK)
+    val _new_line = new TokenData("""\n""".r, TokenType.BREAK)
+    val _semi_colon = new TokenData(";".r, TokenType.BREAK)
     val _int_literal = new TokenData("-?\\d+".r, TokenType.INT_LITERAL)
     val _bool_literal = new TokenData("^(tt|ff)$".r, TokenType.BOOL_LITERAL)
     val _alpha_literal = new TokenData("""(["'])[^"']+\1""".r, TokenType.ALPHA_LITERAL)
@@ -36,7 +37,7 @@ class Tokenizer(code: String) {
     val _var_type = new TokenData("(var)".r, TokenType.VAR_TYPE)
     val _const_type = new TokenData("(const)".r, TokenType.CONST_TYPE)
     val _skip = new TokenData("^(skip)$".r, TokenType.SKIP)
-    val finalList = List( _break,_var_type,_const_type,_skip, _print, _while, _do, _if, _then, _else, _colon, _data_type ,_uop ,  _sub,_alpha_literal,_int_literal,_plus, _multiply, _divide, _bop,_assign_op, _bool_literal , _nil, _identifier )
+    val finalList = List( _semi_colon,_new_line,_var_type,_const_type,_skip, _print, _while, _do, _if, _then, _else, _colon, _data_type ,_uop ,  _sub,_alpha_literal,_int_literal,_plus, _multiply, _divide, _bop,_assign_op, _bool_literal , _nil, _identifier )
     return finalList
   }
   
@@ -67,6 +68,7 @@ class Tokenizer(code: String) {
     else return (tokenList.apply(current_pos), current_pos+1)
   }
   
+  //getting next token without changing current position => looking at next token to predict previous step.
   def lookAhead(current_pos: Int): (Token,Int) = {
     if (current_pos > tokenList.length-1) return(new Token("EOF",null),current_pos) 
     else return (tokenList.apply(current_pos), current_pos)
