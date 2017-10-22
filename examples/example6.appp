@@ -1,0 +1,2 @@
+var x:int = 10; 
+while x>0 do x=x-1; skip; print x; print x+10

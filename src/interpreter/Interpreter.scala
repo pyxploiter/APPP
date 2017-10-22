@@ -62,16 +62,34 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
   // evaluating assignment node
   def evaluate_Assign(node: Assign, var_table: Map[String,value]): (Any,Map[String,value]) = {
     try{
-    if((var_table.apply(node.left.asInstanceOf[Var].token.getToken()).var_type).equals("var")){
-      val var_name = node.left.asInstanceOf[Var].token.getToken()
-      val var_value = var_table(var_name)
-      try { if (var_value.var_name.equals("null")) throw new Exception() }
-      catch { case ex:Exception => println("Error: \""+var_name+"\" is not defined"); exit }
-      val right_node = visit(node.right, var_table)._1
-      val new_var_table = var_table.+(var_name -> (new value(var_value.var_type, var_value.var_name, var_value.data_type, right_node)))
-      return (1, new_var_table)
-    }
-    else throw new Exception()
+      if((var_table.apply(node.left.asInstanceOf[Var].token.getToken()).var_type).equals("var")){
+        val var_name = node.left.asInstanceOf[Var].token.getToken()
+        val var_value = var_table(var_name)
+        
+        try { if (var_value.var_name.equals("null")) throw new Exception() }
+        catch { case ex:Exception => println("Error: \""+var_name+"\" is not defined"); exit }
+        val right_node = visit(node.right, var_table)._1
+       
+        try {
+          if (right_node.getClass().toString().equals("class java.lang.Integer") && var_value.data_type.equals("int")){
+            val new_var_table = var_table.+(var_name -> (new value(var_value.var_type, var_value.var_name, var_value.data_type, right_node)))
+            return ("", new_var_table)
+          }
+          else if (right_node.getClass().toString().equals("class java.lang.Boolean") && var_value.data_type.equals("bool")){
+            val new_var_table = var_table.+(var_name -> (new value(var_value.var_type, var_value.var_name, var_value.data_type, right_node)))
+            return ("", new_var_table)
+          }
+          else if (right_node.getClass().toString().equals("class java.lang.String") && var_value.data_type.equals("alpha")){
+            val new_var_table = var_table.+(var_name -> (new value(var_value.var_type, var_value.var_name, var_value.data_type, right_node)))
+            return ("", new_var_table)
+          } else if (var_value.data_type.equals("DATA_TYPE")){
+            val new_var_table = var_table.+(var_name -> (new value(var_value.var_type, var_value.var_name, var_value.data_type, right_node)))
+            return ("", new_var_table)
+          }
+          else throw new Exception() }
+        catch { case ex:Exception => println("Error: Value should be of type \""+var_value.data_type+"\""); exit }
+     }
+      else throw new Exception()
     } catch {case ex:Exception => println("Error: Reassigning 'const' is not allowed"); exit}
   }
   
@@ -97,7 +115,7 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
   // evaluating while-loop node
   def evaluate_While(node: WhileLoop, var_table: Map[String, value]):(Any, Map[String,value]) = {
     def recurse_do(ans:Any, var_table : Map[String, value] ): (Any, Map[String, value])={
-      if (visit(node.while_cond,var_table)._1 != 0){
+      if (visit(node.while_cond,var_table)._1.toString().toBoolean){
         def recurse_do_statements(ans:Any, var_table: Map[String,value], statements: List[AST]): (Any, Map[String, value]) = {
           if (!statements.isEmpty){
             val (answer, new_table) = visit(statements.head, var_table)

@@ -47,7 +47,7 @@ class RulesTest {
   @Test
   def int_refers_validate{
     //true input
-    val codeFile = "var x:int = ~100"
+    val codeFile = "var x:int = 100; x= ~100"
 	  val tokenizer: Tokenizer = new Tokenizer(codeFile)
     val parser: Parser = new Parser(tokenizer)
     val interpreter = new Interpreter(parser, var_table)
@@ -93,11 +93,11 @@ class RulesTest {
   @Test
   def expression_validate{
     val add_expr = BinOp(Num(new Token("10",TokenType.INT_LITERAL)), new Token("><", TokenType.BOP), Num(new Token("20", TokenType.INT_LITERAL)))
-    val answer = 1  // 10 >< 20 => (0 = false and 1 = true)
+    val answer = true  // 10 >< 20 => 10 not equal to 20
 	  val tokenizer: Tokenizer = new Tokenizer("")
     val parser: Parser = new Parser(tokenizer)
     val interpreter = new Interpreter(parser, var_table)
-    assertEquals(interpreter.evaluate_BinOp(add_expr, var_table)._1, answer)
+    assertEquals(answer, interpreter.evaluate_BinOp(add_expr, var_table)._1)
   }
   
   @Test
@@ -107,38 +107,38 @@ class RulesTest {
 	  val tokenizer: Tokenizer = new Tokenizer("")
     val parser: Parser = new Parser(tokenizer)
     val interpreter = new Interpreter(parser, var_table)
-    assertEquals(interpreter.evaluate_BinOp(add_expr, var_table)._1, answer)
+    assertEquals(answer, interpreter.evaluate_BinOp(add_expr, var_table)._1)
     
-    val bool_equal_expr = BinOp(Bool(new Token("tt",TokenType.BOOL_LITERAL)), new Token("==", TokenType.BOP), Bool(new Token("tt", TokenType.BOOL_LITERAL)))
-    val answer1 = 1  // 1 for true 0 for false
+    val bool_equal_expr = BinOp(Bool(new Token("tt",TokenType.BOOL_LITERAL)), new Token("==", TokenType.BOP), Bool(new Token("ff", TokenType.BOOL_LITERAL)))
+    val answer1 = false  // tt == ff => true == false
 	  val tokenizer1: Tokenizer = new Tokenizer("")
     val parser1: Parser = new Parser(tokenizer1)
     val interpreter1 = new Interpreter(parser1, var_table)
-    assertEquals(interpreter1.evaluate_BinOp(bool_equal_expr, var_table)._1, answer1)
+    assertEquals(answer1, interpreter1.evaluate_BinOp(bool_equal_expr, var_table)._1)
     
     val power_of_expr = BinOp(Num(new Token("3",TokenType.INT_LITERAL)), new Token("^", TokenType.BOP), Num(new Token("3", TokenType.INT_LITERAL)))
     val answer2 = 27  // 3^3 = 3*3*3
 	  val tokenizer2: Tokenizer = new Tokenizer("")
     val parser2: Parser = new Parser(tokenizer2)
     val interpreter2 = new Interpreter(parser2, var_table)
-    assertEquals(interpreter2.evaluate_BinOp(power_of_expr, var_table)._1, answer2) 
+    assertEquals(answer2, interpreter2.evaluate_BinOp(power_of_expr, var_table)._1) 
   }
   
   @Test
   def unary_operators_validate{
     val not_op_expr = UnaryOp((new Token("not",TokenType.UOP)), Bool(new Token("tt", TokenType.BOOL_LITERAL)))
-    val answer1 = 0  // not tt = ff => (not true = false) => 0 = false and 1 = true
+    val answer1 = false  // (not true = false)
 	  val tokenizer1: Tokenizer = new Tokenizer("")
     val parser1: Parser = new Parser(tokenizer1)
     val interpreter1 = new Interpreter(parser1, var_table)
-    assertEquals(interpreter1.evaluate_UnaryOp(not_op_expr, var_table)._1, answer1) 
+    assertEquals(answer1, interpreter1.evaluate_UnaryOp(not_op_expr, var_table)._1) 
     
     val neg_op_expr = UnaryOp((new Token("~",TokenType.UOP)), Num(new Token("3", TokenType.INT_LITERAL)))
     val answer2 = -3  // ~3 = -3 
 	  val tokenizer2: Tokenizer = new Tokenizer("")
     val parser2: Parser = new Parser(tokenizer2)
     val interpreter2 = new Interpreter(parser2, var_table)
-    assertEquals(interpreter2.evaluate_UnaryOp(neg_op_expr, var_table)._1, answer2) 
+    assertEquals(answer2, interpreter2.evaluate_UnaryOp(neg_op_expr, var_table)._1) 
   }
   
   @Test
@@ -165,6 +165,6 @@ class RulesTest {
     val tokenizer2: Tokenizer = new Tokenizer("")
     val parser2: Parser = new Parser(tokenizer2)
     val interpreter2 = new Interpreter(parser2, var_table)
-    assertEquals(interpreter2.evaluate_Print(statement, var_table)._1, 1)
+    assertEquals("",interpreter2.evaluate_Print(statement, var_table)._1)
   }
 }
