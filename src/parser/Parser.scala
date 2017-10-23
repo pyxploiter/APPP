@@ -19,23 +19,27 @@ class Parser(val tokenizer: Tokenizer) {
   
   //AbstractSyntaxTree statement is actually root of parse tree
   def compound_statement(current_token: Token, current_token_pos: Int): (Token, Int, AST) = {
-    val (cur_token, cur_token_pos, nodes) = statement_list(current_token, current_token_pos)
+    val (cur_token, cur_token_pos, nodes) = statement_list(current_token, current_token_pos, false)
     val root = AbstractSyntaxTree(nodes)
     return (cur_token, cur_token_pos,root)
   }
   
   //returning list of statement nodes
-  def statement_list(current_token:Token, current_token_pos:Int): (Token, Int, List[AST]) = {
+  def statement_list(current_token:Token, current_token_pos:Int, flag: Boolean): (Token, Int, List[AST]) = {
     val (cur_token, cur_token_pos, node) = statement(current_token, current_token_pos)
     val results = List(node)
     
-    def get_next_statement(token: Token, token_pos: Int, resultx: List[AST]): (Token, Int, List[AST]) = {
-      if (token.getType() == TokenType.BREAK){
+    def get_next_statement(token: Token, token_pos: Int, resultx: List[AST], while_flag: Boolean): (Token, Int, List[AST]) = {
+      if (token.getToken().equals("\n") && while_flag){
+        return (token, token_pos,resultx)
+      }
+      else if (token.getToken().equals(";") || token.getToken().equals("\n")){
         val (cur_token, cur_token_pos) = eat(token, TokenType.BREAK,token_pos)
         if (cur_token_pos != token_pos){
-          val (cur_tok, cur_tok_pos, node) = statement(cur_token, cur_token_pos)
+          val (c_tok, c_tok_pos) = if (cur_token.getType() == TokenType.BREAK) eat(cur_token, TokenType.BREAK,cur_token_pos) else (cur_token,cur_token_pos)
+          val (cur_tok, cur_tok_pos, node) = statement(c_tok, c_tok_pos)
           val new_list: List[AST] = resultx :+ node
-          val (tok, pos, result) = get_next_statement(cur_tok, cur_tok_pos, new_list)
+          val (tok, pos, result) = get_next_statement(cur_tok, cur_tok_pos, new_list, while_flag: Boolean)
           return (tok, pos, result)
         }
         else
@@ -53,7 +57,7 @@ class Parser(val tokenizer: Tokenizer) {
       }
     }
     
-    val (cur_tok, cur_tok_pos, new_results) = get_next_statement(cur_token, cur_token_pos, results)
+    val (cur_tok, cur_tok_pos, new_results) = get_next_statement(cur_token, cur_token_pos, results, flag)
     return (cur_tok, cur_tok_pos, new_results)
   }
   
@@ -95,7 +99,6 @@ class Parser(val tokenizer: Tokenizer) {
         return (tok, pos, node)
       }
       
-      
       else if (current_token.getType() == TokenType.IDENTIFIER){
         if(tokenizer.lookAhead(current_token_pos)._1.getToken().equals("=")){
           val (tok, pos, node) = assign_statement(current_token, current_token_pos)
@@ -107,6 +110,11 @@ class Parser(val tokenizer: Tokenizer) {
           val (tok, pos, node) = variable(current_token, current_token_pos, 0)
           return (tok, pos, node)
         }
+      }
+      
+      else if (current_token.getType() == TokenType.UOP){
+        val (tok, pos, node) = atom(current_token, current_token_pos)
+        return (tok, pos, node)
       }
       
       else if (current_token.getType() == TokenType.ALPHA_LITERAL || current_token.getType() == TokenType.BOOL_LITERAL || current_token.getType() == TokenType.INT_LITERAL ){
@@ -160,7 +168,7 @@ class Parser(val tokenizer: Tokenizer) {
       
       case TokenType.NIL => {
         val (cur_token, cur_token_pos) = eat(current_token, TokenType.NIL, current_token_pos)
-        return (cur_token, cur_token_pos, Nil(current_token))
+        return (cur_token, cur_token_pos, Nil(current_token,current_token.getType()))
       }
       
       case _ => {
@@ -247,7 +255,7 @@ class Parser(val tokenizer: Tokenizer) {
     val (current_tok, current_tok_pos) = eat(current_token, TokenType.WHILE,current_token_pos)
     val (cur_tok, cur_pos, expr_node) = expr(current_tok, current_tok_pos)
     val (cur_token, cur_token_pos) = eat(cur_tok, TokenType.DO, cur_pos)
-    val (tok, pos, statement_node) = statement_list(cur_token, cur_token_pos)
+    val (tok, pos, statement_node) = statement_list(cur_token, cur_token_pos, true)
     val while_node = WhileLoop(expr_node, statement_node)
     return (tok, pos, while_node)
   }
@@ -292,7 +300,7 @@ class Parser(val tokenizer: Tokenizer) {
     if(cur_tok.getType() != TokenType.ASSIGNMENT){
       try{
         if (cur_tok.getType() == TokenType.BREAK){
-          val next_node = VarDec(left_node, cur_token, Nil(new Token("",TokenType.NIL)))
+          val next_node = VarDec(left_node, cur_token, Nil(new Token("",TokenType.NIL), data_type_token.getType()))
           return (cur_tok, cur_tok_pos, next_node)
         }
         else throw new Exception()
@@ -300,7 +308,7 @@ class Parser(val tokenizer: Tokenizer) {
     }
     val (c_tok, tok_pos) = eat(cur_tok, TokenType.ASSIGNMENT,cur_tok_pos)
     if (data_type_token.getToken().equals("int")){
-      Try(c_tok.getToken().r.pattern.matcher("-?[0-9]+$").find()).getOrElse(
+      Try(c_tok.getToken().toInt).getOrElse(
           try{
             if(c_tok.getType() == TokenType.NIL) Success
             else if(c_tok.getType() == TokenType.IDENTIFIER) Success

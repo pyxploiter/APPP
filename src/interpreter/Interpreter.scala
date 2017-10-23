@@ -4,11 +4,11 @@ import parser._
 import parser.Parser
 import token.TokenType
 
-case class value(var_type: String, var_name: String, data_type: String, var_value: Int)
+case class value(var_type: String, var_name: String, data_type: String, var_value: Any)
 
 class Interpreter(val parser: Parser, val var_table: Map[String, value]){
   //visiting each node of ASR
-  def visit(node: AST, var_table: Map[String, value]): (Int,Map[String,value]) = {
+  def visit(node: AST, var_table: Map[String, value]): (Any,Map[String,value]) = {
     try{
       if (node.isInstanceOf[BinOp]) evaluate_BinOp(node.asInstanceOf[BinOp], var_table)
       else if (node.isInstanceOf[UnaryOp]) evaluate_UnaryOp(node.asInstanceOf[UnaryOp], var_table)
@@ -29,7 +29,6 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
   // evaluating complete Abstract syntax tree
   def evaluate_AST(node: AbstractSyntaxTree, var_table: Map[String, value]) = {
     def evaluate_nodes(node: List[AST], var_table: Map[String, value]){
-      //println(node)
       if(!node.isEmpty){
         val new_var_table = visit(node.head, var_table)._2
         evaluate_nodes(node.tail, new_var_table)
@@ -40,58 +39,84 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
   }
   
   // evaluating variable declaration node
-  def evaluate_VarDec(node: VarDec, var_table: Map[String, value]): (Int, Map[String,value]) = {
+  def evaluate_VarDec(node: VarDec, var_table: Map[String, value]): (Any, Map[String,value]) = {
     val var_name = if (node.left.isInstanceOf[Var]) node.left.asInstanceOf[Var].token.getToken() else node.left.asInstanceOf[Const].token.getToken() 
     val var_value = var_table(var_name)
-    if (!var_value.var_name.equals("null")) throw new Exception("Variable \""+var_name+"\" is already declared")
+    try { if (!var_value.var_name.equals("null")) throw new Exception() 
+    } catch {case ex:Exception => println("Variable \""+var_name+"\" is already declared"); exit}
     val right_node = visit(node.right, var_table)
-    val new_value = if(node.left.isInstanceOf[Var]) new value("var", var_name, "int" ,right_node._1) else new value("const", var_name, "int" ,right_node._1)
-    val new_var_table = var_table+(var_name -> new_value)
-    return (1, new_var_table)
+    val var_type = if(node.left.isInstanceOf[Var]) ("var",node.left.asInstanceOf[Var].token.getType()) else ("const",node.left.asInstanceOf[Const].token.getType())
+      try{
+        if(node.right.isInstanceOf[Num]) 
+          return (1,var_table+(var_name->new value(var_type._1, var_name, "int" ,right_node._1)))
+        else if (node.right.isInstanceOf[Bool]) 
+          return (1,var_table+(var_name->new value(var_type._1, var_name, "bool" ,right_node._1)))
+        else if (node.right.isInstanceOf[Alpha]) 
+          return (1,var_table+(var_name->new value(var_type._1, var_name, "alpha" ,right_node._1)))
+        else if (node.right.isInstanceOf[Nil])
+          return (1,var_table+(var_name->new value(var_type._1, var_name, node.right.asInstanceOf[Nil].token_type.toString() ,0)))
+        else throw new Exception()
+      } catch {case ex:Exception => println("Error: Variable Type mismatch with assigning value"); exit}
   }
   
   // evaluating assignment node
-  def evaluate_Assign(node: Assign, var_table: Map[String,value]): (Int,Map[String,value]) = {
+  def evaluate_Assign(node: Assign, var_table: Map[String,value]): (Any,Map[String,value]) = {
     try{
-    if((var_table.apply(node.left.asInstanceOf[Var].token.getToken()).var_type).equals("var")){
-      val var_name = node.left.asInstanceOf[Var].token.getToken()
-      val var_value = var_table(var_name)
-      if (var_value.var_name.equals("null")){
-        throw new Exception("Error: Variable not declared")
-      }
-      val right_node = visit(node.right, var_table)._1
-      val new_var_table = var_table.+(var_name -> (new value(var_value.var_type, var_value.var_name, var_value.data_type, right_node)))
-      return (1, new_var_table)
-    }
-    else throw new Exception()
+      if((var_table.apply(node.left.asInstanceOf[Var].token.getToken()).var_type).equals("var")){
+        val var_name = node.left.asInstanceOf[Var].token.getToken()
+        val var_value = var_table(var_name)
+        
+        try { if (var_value.var_name.equals("null")) throw new Exception() }
+        catch { case ex:Exception => println("Error: \""+var_name+"\" is not defined"); exit }
+        val right_node = visit(node.right, var_table)._1
+       
+        try {
+          if (right_node.getClass().toString().equals("class java.lang.Integer") && var_value.data_type.equals("int")){
+            val new_var_table = var_table.+(var_name -> (new value(var_value.var_type, var_value.var_name, var_value.data_type, right_node)))
+            return ("", new_var_table)
+          }
+          else if (right_node.getClass().toString().equals("class java.lang.Boolean") && var_value.data_type.equals("bool")){
+            val new_var_table = var_table.+(var_name -> (new value(var_value.var_type, var_value.var_name, var_value.data_type, right_node)))
+            return ("", new_var_table)
+          }
+          else if (right_node.getClass().toString().equals("class java.lang.String") && var_value.data_type.equals("alpha")){
+            val new_var_table = var_table.+(var_name -> (new value(var_value.var_type, var_value.var_name, var_value.data_type, right_node)))
+            return ("", new_var_table)
+          } else if (var_value.data_type.equals("DATA_TYPE")){
+            val new_var_table = var_table.+(var_name -> (new value(var_value.var_type, var_value.var_name, var_value.data_type, right_node)))
+            return ("", new_var_table)
+          }
+          else throw new Exception() }
+        catch { case ex:Exception => println("Error: Value should be of type \""+var_value.data_type+"\""); exit }
+     }
+      else throw new Exception()
     } catch {case ex:Exception => println("Error: Reassigning 'const' is not allowed"); exit}
   }
   
   // getting variable value from Var node
-  def evaluate_Var(node: Var, var_table: Map[String, value]): (Int, Map[String,value]) = {
+  def evaluate_Var(node: Var, var_table: Map[String, value]): (Any, Map[String,value]) = {
     try{
       if (!var_table(node.token.getToken()).var_name.equals("null")){
-        val int_value = var_table(node.token.getToken()).var_value
-        return (int_value, var_table)
+        val var_value = var_table(node.token.getToken()).var_value
+        return (var_value, var_table)
       }
       else throw new Exception()
-    } catch { case ex: Exception => println("Error: variable \""+node.token.getToken()+"\" not found"); exit } 
-    return (0, var_table)
+    } catch { case ex: Exception => println("Error: \""+node.token.getToken()+"\" is not defined"); exit } 
+    return ("", var_table)
   }
   
   // evaluating print node
-  def evaluate_Print(node: PrintStatement, var_table: Map[String, value]):(Int, Map[String,value]) = {
+  def evaluate_Print(node: PrintStatement, var_table: Map[String, value]):(Any, Map[String,value]) = {
     val answer = visit(node.statement, var_table)._1
-    if(!node.statement.isInstanceOf[Alpha])
-      println(answer)
-    return (1, var_table)
+    println(answer)
+    return ("", var_table)
   }
   
   // evaluating while-loop node
-  def evaluate_While(node: WhileLoop, var_table: Map[String, value]):(Int, Map[String,value]) = {
-    def recurse_do(ans:Int, var_table : Map[String, value] ): (Int, Map[String, value])={
-      if (visit(node.while_cond,var_table)._1 != 0){
-        def recurse_do_statements(ans:Int, var_table: Map[String,value], statements: List[AST]): (Int, Map[String, value]) = {
+  def evaluate_While(node: WhileLoop, var_table: Map[String, value]):(Any, Map[String,value]) = {
+    def recurse_do(ans:Any, var_table : Map[String, value] ): (Any, Map[String, value])={
+      if (visit(node.while_cond,var_table)._1.toString().toBoolean){
+        def recurse_do_statements(ans:Any, var_table: Map[String,value], statements: List[AST]): (Any, Map[String, value]) = {
           if (!statements.isEmpty){
             val (answer, new_table) = visit(statements.head, var_table)
             recurse_do_statements(answer, new_table, statements.tail)
@@ -109,8 +134,8 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
   }
   
   // evaluating if-else node
-  def evaluate_If(node: IfElse, var_table: Map[String, value]):(Int, Map[String,value]) = {
-    if(visit(node.if_node, var_table)._1 != 0){
+  def evaluate_If(node: IfElse, var_table: Map[String, value]):(Any, Map[String,value]) = {
+    if(visit(node.if_node, var_table)._1 != false){
       val answer = visit(node.then_node, var_table)._1
       return (answer, var_table)
     } else {
@@ -120,56 +145,56 @@ class Interpreter(val parser: Parser, val var_table: Map[String, value]){
   }
   
   // evaluating unary operation
-  def evaluate_UnaryOp(node: UnaryOp, var_table: Map[String, value]): (Int, Map[String,value]) = {
+  def evaluate_UnaryOp(node: UnaryOp, var_table: Map[String, value]): (Any, Map[String,value]) = {
     try{
-      if (node.token.getType() == TokenType.UOP){
-        if (node.expr_node.isInstanceOf[Bool]){
-          if (visit(node.expr_node, var_table)._1 != 0){
-            return (0,var_table)
-          } else return (1, var_table)
-        }
-        else return (-visit(node.expr_node, var_table)._1,var_table)
+      if (node.token.getType() == TokenType.UOP){  
+        val result = visit(node.expr_node, var_table)._1.toString()
+        if (result.matches("true")) return (false, var_table)
+        else if (result.matches("false")) return (true, var_table)
+        else return (-result.toInt, var_table)
       }
       else throw new Exception()
-   } catch { case ex: Exception => println("Error: Invalid operation. Only '~' and 'not' unary operators are allowed"); exit }
+   } catch { case ex: Exception => println("Error: Invalid unary operation."); exit }
    return (0,var_table)
   }
   
   // evaluating binary operations
-  def evaluate_BinOp(node: BinOp, var_table: Map[String, value]): (Int, Map[String,value]) = {
+  def evaluate_BinOp(node: BinOp, var_table: Map[String, value]): (Any, Map[String,value]) = {
     try{  
       if (!node.left.getClass().toString.equals("class parser.Alpha") && !node.right.getClass().toString.equals("class parser.Alpha")){
-        if(node.token.getType()==TokenType.PLUS) return (((visit(node.left,var_table)._1) + (visit(node.right,var_table)._1)), var_table)
-        else if (node.token.getType()==TokenType.MUL) return (((visit(node.left,var_table)._1) * (visit(node.right,var_table)._1)), var_table)
-        else if (node.token.getType()==TokenType.DIV) return ((visit(node.left,var_table)._1 / visit(node.right,var_table)._1), var_table)
-        else if (node.token.getType()==TokenType.SUB) return ((visit(node.left,var_table)._1 - visit(node.right,var_table)._1), var_table)
+        if(node.token.getType()==TokenType.PLUS) return (((visit(node.left,var_table)._1).toString().toInt + (visit(node.right,var_table)._1).toString().toInt), var_table)
+        else if (node.token.getType()==TokenType.MUL) return (((visit(node.left,var_table)._1).toString().toInt * (visit(node.right,var_table)._1).toString().toInt), var_table)
+        else if (node.token.getType()==TokenType.DIV) return ((visit(node.left,var_table)._1.toString().toInt / visit(node.right,var_table)._1.toString().toInt), var_table)
+        else if (node.token.getType()==TokenType.SUB) return ((visit(node.left,var_table)._1.toString().toInt - visit(node.right,var_table)._1.toString().toInt), var_table)
         else if (node.token.getType()==TokenType.BOP){
           node.token.getToken() match {
-             case "^" => return (Math.pow(visit(node.left,var_table)._1, visit(node.right,var_table)._1).toInt, var_table);
-             case "==" => if (visit(node.left,var_table)._1 == visit(node.right,var_table)._1) return (1,var_table) else return (0,var_table) 
-             case "><" => if (visit(node.left,var_table)._1 != visit(node.right,var_table)._1) return (1,var_table) else return (0,var_table) 
-             case ">" => if (visit(node.left,var_table)._1 > visit(node.right,var_table)._1) return (1,var_table) else return (0,var_table)
-             case "<" => if (visit(node.left,var_table)._1 < visit(node.right,var_table)._1) return (1,var_table) else return (0,var_table)
-             case "and" => if ((visit(node.left,var_table)._1 * visit(node.right,var_table)._1) == 0) return (0,var_table) else return (1,var_table)
-             case "or" => if ((visit(node.left,var_table)._1 + visit(node.right,var_table)._1) == 0) return (0,var_table) else return (1,var_table)
+             case "^" => { 
+               if (node.left.getClass().toString().equals("class parser.Bool")) return (visit(node.left,var_table)._1.toString().toBoolean ^ visit(node.right,var_table)._1.toString().toBoolean, var_table)
+               else return (Math.pow(visit(node.left,var_table)._1.toString().toInt, visit(node.right,var_table)._1.toString().toInt).toInt, var_table);
+             }
+             case "==" => return (visit(node.left,var_table)._1 == visit(node.right,var_table)._1, var_table)
+             case "><" => return (visit(node.left,var_table)._1 != visit(node.right,var_table)._1, var_table) 
+             case ">" => return ((visit(node.left,var_table)._1.toString().toInt > visit(node.right,var_table)._1.toString().toInt), var_table)
+             case "<" => return ((visit(node.left,var_table)._1.toString().toInt < visit(node.right,var_table)._1.toString().toInt), var_table)
+             case "and" => return ((visit(node.left,var_table)._1.toString().toBoolean && visit(node.right,var_table)._1.toString().toBoolean), var_table)
+             case "or" => return ((visit(node.left,var_table)._1.toString().toBoolean || visit(node.right,var_table)._1.toString().toBoolean), var_table)
            }
         }
       }
       else throw new Exception()
     } catch { case ex:Exception => println("Error: Invalid operands in binary operation"); exit }
-    return (0, var_table) //never returned
+    return ("", var_table) //never returned
   }
   
   // evaluating integer node
-  def evaluate_Num(node: Num, var_table: Map[String, value]):(Int, Map[String,value]) = return (node.token.getToken().toInt, var_table)
+  def evaluate_Num(node: Num, var_table: Map[String, value]):(Any, Map[String,value]) = return (node.token.getToken().toInt, var_table)
   
   // evaluating boolean node
-  def evaluate_Bool(node: Bool, var_table: Map[String, value]): (Int, Map[String,value]) = if(node.token.getOriginalToken().toBoolean) return (1,var_table) else return (0,var_table)
+  def evaluate_Bool(node: Bool, var_table: Map[String, value]): (Any, Map[String,value]) = return (node.token.getOriginalToken().toBoolean, var_table)// return (1,var_table) else return (0,var_table)
   
   // evaluating Alpha node
-  def evaluate_Alpha(node: Alpha, var_table: Map[String, value]): (Int, Map[String,value]) = {
-    print(node.token.getToken().substring(1, node.token.getToken().length()-1))
-    return (1, var_table) 
+  def evaluate_Alpha(node: Alpha, var_table: Map[String, value]): (Any, Map[String,value]) = {
+    return (node.token.getToken().substring(1, node.token.getToken().length()-1), var_table) 
   }
   
   // interpreting the tree

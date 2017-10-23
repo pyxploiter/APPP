@@ -15,7 +15,7 @@ class Tokenizer(code: String) {
     val _break = new TokenData("""\n|;""".r, TokenType.BREAK)
     val _int_literal = new TokenData("-?\\d+".r, TokenType.INT_LITERAL)
     val _bool_literal = new TokenData("^(tt|ff)$".r, TokenType.BOOL_LITERAL)
-    val _alpha_literal = new TokenData("^([\"|\']).*([\"|\'])$".r, TokenType.ALPHA_LITERAL)
+    val _alpha_literal = new TokenData("""(["'])[^"']+\1""".r, TokenType.ALPHA_LITERAL)
     val _plus = new TokenData("\\+".r, TokenType.PLUS)
     val _multiply = new TokenData("\\*".r, TokenType.MUL)
     val _divide = new TokenData("\\/".r, TokenType.DIV)
