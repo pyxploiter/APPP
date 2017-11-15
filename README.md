@@ -1,5 +1,6 @@
-# APPP
-<b>APPP is an interpreter for a new language AP++ </b><br/><br/>
+# APPP - Interpreter in Scala Functional Programming
+<b>This is an Interpreter for AP++ imperative language using the functional paradigm in scala
+</b><br/><br/>
 A simple Interpreted Language, AP++ is defined as follows: <br/><br/>
 
 <img src="https://user-images.githubusercontent.com/20368350/31855516-3f6f78c2-b6c6-11e7-8cbb-c2610bdd9635.PNG"></img>
